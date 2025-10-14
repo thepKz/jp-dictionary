@@ -3,7 +3,7 @@
 export default function ThemeToggle() {
   return (
     <button
-      className="rounded-lg border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+      className="btn-secondary hover-lift px-4 py-2 text-sm font-light"
       onClick={() => {
         if (typeof document === 'undefined') return;
         const el = document.documentElement;
