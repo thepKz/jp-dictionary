@@ -1,63 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-
-type JishoSense = {
-  english_definitions?: string[];
-  parts_of_speech?: string[];
-  tags?: string[];
-  info?: string[];
-};
-
-type JishoDatum = {
-  slug?: string;
-  is_common?: boolean;
-  japanese?: Array<{ word?: string; reading?: string }>;
-  senses?: JishoSense[];
-};
-
-type JishoResponse = {
-  data?: JishoDatum[];
-};
-
-const ECON_KEYWORDS = [
-  "経済", // kinh tế
-  "金融", // tài chính
-  "商業", // thương mại
-  "国際", // quốc tế
-  "消費", // tiêu thụ
-  "効率", // hiệu suất
-  "合理", // hợp lý
-];
-
-function isEconomicAdjective(entry: JishoDatum): boolean {
-  if (!entry?.senses || entry.senses.length === 0) return false;
-  const isAdj = entry.senses.some((s) =>
-    (s.parts_of_speech || []).some((p) =>
-      p.includes("adjectival") || p.includes("adjective") || p.includes("な形容詞") || p.includes("い形容詞")
-    )
-  );
-  if (!isAdj) return false;
-
-  const textBlob = [
-    (entry.japanese || []).map((j) => `${j.word ?? ""} ${j.reading ?? ""}`).join(" "),
-    (entry.senses || [])
-      .flatMap((s) => [...(s.english_definitions || []), ...(s.tags || []), ...(s.info || [])])
-      .join(" "),
-  ].join(" ");
-
-  return ECON_KEYWORDS.some((kw) => textBlob.includes(kw));
-}
+import fs from "node:fs";
+import path from "node:path";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").trim();
-  const source = (searchParams.get("source") || "jisho").toLowerCase();
+  // Empty query shows all entries
   if (!q) {
-    return NextResponse.json({ data: [], q }, { status: 200 });
+    try {
+      const allData = searchLocalCsv("");
+      return NextResponse.json({ data: allData, q: "", source: "local", count: allData.length });
+    } catch {
+      return NextResponse.json({ data: [], q: "", source: "local", count: 0 });
+    }
   }
 
   // Basic in-memory caching and rate limiting
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const cacheKey = `${source}:${q}`;
+  const cacheKey = q; // local-only cache key
   const cached = getFromCache(cacheKey);
   if (cached) {
     return NextResponse.json(cached);
@@ -66,36 +26,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
-  // Public Jisho endpoint (no key) – default source
-  const url = `https://jisho.org/api/v1/search/words?keyword=${encodeURIComponent(q)}`;
-
   try {
-    const res = await fetch(url, { next: { revalidate: 60 } });
-    if (!res.ok) {
-      return NextResponse.json({ error: "Upstream error" }, { status: 502 });
-    }
-    const json: JishoResponse = await res.json();
-    const raw = json.data || [];
-
-    const filtered = raw.filter(isEconomicAdjective).map((e) => {
-      const primary = (e.japanese || [])[0] || {};
-      return {
-        kanji: primary.word || primary.reading || e.slug || "",
-        reading: primary.reading || "",
-        isCommon: !!e.is_common,
-        senses: (e.senses || []).map((s) => ({
-          pos: s.parts_of_speech || [],
-          defs: s.english_definitions || [],
-          tags: s.tags || [],
-        })),
-      };
-    });
-
-    const payload = { q, source, count: filtered.length, data: filtered };
+    const filtered = searchLocalCsv(q);
+    const payload = { q, source: "local", count: filtered.length, data: filtered };
     putInCache(cacheKey, payload);
     return NextResponse.json(payload);
-  } catch (err) {
-    return NextResponse.json({ error: "Request failed" }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Local CSV load failed" }, { status: 500 });
   }
 }
 
@@ -140,6 +77,138 @@ function rateLimitAllow(ip: string): boolean {
   if (b.tokens <= 0) return false;
   b.tokens -= 1;
   return true;
+}
+
+// --- Local CSV loader and searcher ---
+type LocalEntry = {
+  kanji: string;
+  reading: string;
+  meaning: string;
+  example?: string;
+  translation?: string;
+  linkJP?: string;
+  linkVN?: string;
+};
+
+let LOCAL_DATA: LocalEntry[] | null = null;
+
+function ensureLocalDataLoaded() {
+  if (LOCAL_DATA) return;
+  const root = path.resolve(process.cwd());
+  const f1 = path.join(root, "data", "list1.csv");
+  const f2 = path.join(root, "data", "list2.csv");
+  const raw1 = safeReadFile(f1);
+  const raw2 = safeReadFile(f2);
+  LOCAL_DATA = [...parseCsv(raw1), ...parseCsv(raw2)];
+}
+
+function safeReadFile(filePath: string): string {
+  try {
+    return fs.readFileSync(filePath, "utf8");
+  } catch {
+    return "";
+  }
+}
+
+function parseCsv(text: string): LocalEntry[] {
+  if (!text) return [];
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  if (lines.length === 0) return [];
+  const out: LocalEntry[] = [];
+  for (let i = 1; i < lines.length; i += 1) {
+    const cols = splitCsvLine(lines[i]);
+    if (cols.length < 4) continue;
+    const kanji = (cols[1] || "").trim();
+    const reading = (cols[2] || "").trim();
+    const meaning = (cols[3] || "").trim();
+    const example = (cols[4] || "").trim();
+    const translation = (cols[5] || "").trim();
+    const linkJP = (cols[6] || "").trim();
+    const linkVN = (cols[7] || "").trim();
+    if (!kanji) continue;
+    out.push({ kanji, reading, meaning, example, translation, linkJP, linkVN });
+  }
+  return out;
+}
+
+function splitCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === "," && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function searchLocalCsv(q: string) {
+  ensureLocalDataLoaded();
+  const query = q.toLowerCase();
+  
+  // Empty query returns all entries
+  if (!query) {
+    return (LOCAL_DATA || []).map((e) => ({
+      kanji: e.kanji,
+      reading: e.reading,
+      isCommon: false,
+      senses: [
+        {
+          pos: [],
+          defs: [e.meaning].filter(Boolean),
+          tags: [],
+        },
+      ],
+      example: e.example,
+      translation: e.translation,
+      linkJP: e.linkJP,
+      linkVN: e.linkVN,
+    }));
+  }
+  
+  const matched = (LOCAL_DATA || []).filter((e) => {
+    const queryLower = query.toLowerCase();
+    
+    // Exact matches first
+    if (e.kanji.toLowerCase() === queryLower) return true;
+    if (e.reading.toLowerCase() === queryLower) return true;
+    
+    // Partial matches
+    if (e.kanji.toLowerCase().includes(queryLower)) return true;
+    if (e.reading.toLowerCase().includes(queryLower)) return true;
+    if (e.meaning.toLowerCase().includes(queryLower)) return true;
+    
+    return false;
+  });
+  return matched.slice(0, 100).map((e) => ({
+    kanji: e.kanji,
+    reading: e.reading,
+    isCommon: false,
+    senses: [
+      {
+        pos: [],
+        defs: [e.meaning].filter(Boolean),
+        tags: [],
+      },
+    ],
+    example: e.example,
+    translation: e.translation,
+    linkJP: e.linkJP,
+    linkVN: e.linkVN,
+  }));
 }
 
 

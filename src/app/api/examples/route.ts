@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       translations: (r.translations || []).map((t) => ({ id: t.id, text: t.text, lang: t.lang })),
     }));
     return NextResponse.json({ q, to, count: items.length, data: items });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "Request failed" }, { status: 500 });
   }
 }

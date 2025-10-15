@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "playwright test --reporter=line",
+    "test:e2e:ci": "playwright install --with-deps && playwright test --reporter=line"
   },
   "dependencies": {
     "furigana": "^0.19.3",
@@ -24,6 +26,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@playwright/test": "^1.48.2"
   }
 }
