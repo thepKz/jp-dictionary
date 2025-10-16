@@ -178,10 +178,13 @@ export default function SearchBox() {
   const filteredSuggestions = suggestions.filter(item => {
     if (!query) return false;
     const queryLower = query.toLowerCase();
+    const romajiQuery = toRomaji(query);
     return (
       item.kanji.toLowerCase().includes(queryLower) ||
       item.reading.toLowerCase().includes(queryLower) ||
-      item.senses?.[0]?.defs?.[0]?.toLowerCase().includes(queryLower)
+      item.senses?.[0]?.defs?.[0]?.toLowerCase().includes(queryLower) ||
+      toRomaji(item.reading).toLowerCase().includes(queryLower) ||
+      toRomaji(item.reading).toLowerCase().includes(romajiQuery.toLowerCase())
     );
   }).slice(0, 8); // Limit to 8 suggestions
 
@@ -228,10 +231,10 @@ export default function SearchBox() {
 
       {/* Search Input with Dropdown */}
       <div className="relative mb-6">
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
             <input
-              className="input pl-4 pr-4 py-4 text-lg w-full"
+              className="input pl-4 pr-4 py-3 sm:py-4 text-base sm:text-lg w-full"
               placeholder="Ví dụ: 経済的, keizaiteki, economic..."
               value={query}
               onChange={(e) => {
@@ -282,7 +285,7 @@ export default function SearchBox() {
           {/* Search Button */}
           <button
             type="button"
-            className="btn-primary hover-lift px-6 py-4 text-lg font-light flex items-center gap-2"
+            className="btn-primary hover-lift px-4 sm:px-6 py-3 sm:py-4 text-base sm:text-lg font-light flex items-center justify-center gap-2 w-full sm:w-auto"
             onClick={handleSearch}
             disabled={loading}
           >
@@ -293,15 +296,16 @@ export default function SearchBox() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
-                Tìm kiếm
+                <span className="hidden sm:inline">Tìm kiếm</span>
+                <span className="sm:hidden">Tìm</span>
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* Preset Buttons */}
-      <div className="mb-6">
+      {/* Preset Buttons - Hidden */}
+      {/* <div className="mb-6">
         <h3 className="text-sm font-light text-muted-foreground mb-3">Tìm nhanh:</h3>
         <div className="flex flex-wrap gap-2">
           {PRESETS.map((p) => (
@@ -320,7 +324,7 @@ export default function SearchBox() {
             </button>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* Result count */}
       {results.length > 0 && (
@@ -334,15 +338,15 @@ export default function SearchBox() {
       {results.length > 0 && (
         <div className="space-y-4">
           {results.map((r, idx) => (
-            <div key={`${r.kanji}-${idx}`} className="card p-5 hover-lift animate-fadeIn gradient-border shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-card/80 flex flex-col">
+            <div key={`${r.kanji}-${idx}`} className="card p-4 sm:p-5 hover-lift animate-fadeIn gradient-border shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-card to-card/80 flex flex-col">
               {/* Header */}
               <div className="mb-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-2xl font-light">{r.kanji}</h3>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <h3 className="text-xl sm:text-2xl font-light">{r.kanji}</h3>
                   {r.reading && (
                     <button
                       type="button"
-                      className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+                      className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
                       onClick={() => speakJapanese(r.reading).catch(console.error)}
                       title="Phát âm tiếng Nhật"
                     >
@@ -353,7 +357,7 @@ export default function SearchBox() {
                   )}
                 </div>
                 {r.reading && (
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="text-sm text-muted-foreground font-light">{r.reading}</span>
                     <span className="text-xs text-muted-foreground">{toRomaji(r.reading)}</span>
                   </div>
@@ -403,26 +407,38 @@ export default function SearchBox() {
               {(r.linkJP || r.linkVN) && (
                 <div className="text-xs text-muted-foreground mt-auto pt-2 border-t border-border">
                   <div className="font-medium mb-1">Nguồn:</div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     {r.linkJP && (
-                      <a 
-                        href={r.linkJP} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline text-xs"
-                      >
-                        🇯🇵 Nguồn Nhật
-                      </a>
+                      <div className="text-blue-600 text-xs">
+                        🇯🇵 {r.linkJP.startsWith('http') ? (
+                          <a 
+                            href={r.linkJP} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:underline break-all"
+                          >
+                            Nguồn Nhật
+                          </a>
+                        ) : (
+                          <span className="break-all">{r.linkJP}</span>
+                        )}
+                      </div>
                     )}
                     {r.linkVN && (
-                      <a 
-                        href={r.linkVN} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-green-600 hover:underline text-xs"
-                      >
-                        🇻🇳 Nguồn Việt
-                      </a>
+                      <div className="text-green-600 text-xs">
+                        🇻🇳 {r.linkVN.startsWith('http') ? (
+                          <a 
+                            href={r.linkVN} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:underline break-all"
+                          >
+                            Nguồn Việt
+                          </a>
+                        ) : (
+                          <span className="break-all">{r.linkVN}</span>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

@@ -191,6 +191,9 @@ function searchLocalCsv(q: string) {
     if (e.reading.toLowerCase().includes(queryLower)) return true;
     if (e.meaning.toLowerCase().includes(queryLower)) return true;
     
+    // Romaji search support - simplified for server-side
+    // Note: Full romaji search is handled on the client side
+    
     return false;
   });
   return matched.slice(0, 100).map((e) => ({

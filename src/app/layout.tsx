@@ -1,20 +1,6 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP, Noto_Serif_JP, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const notoSansJp = Noto_Sans_JP({
-  variable: "--font-sans-jp",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "700", "900"],
-  display: "swap",
-});
-
-const notoSerifJp = Noto_Serif_JP({
-  variable: "--font-serif-jp",
-  subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600", "700", "900"],
-  display: "swap",
-});
 
 const geistMono = Geist_Mono({
   variable: "--font-mono",
@@ -33,8 +19,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@400;700&display=swap" 
+          rel="stylesheet" 
+        />
+      </head>
       <body
-        className={`${notoSansJp.variable} ${notoSerifJp.variable} ${geistMono.variable} antialiased`}
+        className={`${geistMono.variable} antialiased`}
       >
         {children}
       </body>

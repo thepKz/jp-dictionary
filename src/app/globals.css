@@ -41,8 +41,8 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --font-sans: var(--font-sans-jp), 'Noto Sans JP', 'Meiryo', 'Hiragino Kaku Gothic Pro', Osaka, sans-serif;
-  --font-serif: var(--font-serif-jp), 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --font-sans: 'Noto Sans JP', 'Meiryo', 'Hiragino Kaku Gothic Pro', 'Yu Gothic', 'MS PGothic', Osaka, sans-serif;
+  --font-serif: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', 'MS PMincho', serif;
   --font-mono: var(--font-mono);
 }
 
