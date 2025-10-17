@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       const parsed = parseCsv(text);
       // Nếu admin chọn phạm vi cụ thể (na/i) thì gắn adjType tương ứng cho tất cả bản ghi nhập vào.
       if (scope === "na" || scope === "i") {
-        parsed.forEach((e) => (e.adjType = scope as any));
+        parsed.forEach((e) => (e.adjType = scope as 'na' | 'i'));
       }
       entries.push(...parsed);
     }

@@ -278,7 +278,7 @@ export default function SearchBox() {
       ...s,
       _romaji: toRomaji(s.reading || ""),
       _kana: toKana(toRomaji(s.reading || "")),
-      _meaningNorm: stripVi((s.senses?.[0]?.defs?.[0] as any) || ""),
+      _meaningNorm: stripVi((s.senses?.[0]?.defs?.[0] as string) || ""),
     }));
     const fuse = new Fuse(enriched, {
       keys: [
@@ -347,9 +347,9 @@ export default function SearchBox() {
   const [kanjiInfo, setKanjiInfo] = useState<KanjiInfo[] | null>(null);
   const [kanjiTipPos, setKanjiTipPos] = useState<{x:number;y:number}|null>(null);
   const [kanjiTipVisible, setKanjiTipVisible] = useState(false);
-  const kanjiHoverTimer = useRef<number | null>(null);
-  const kanjiHideTimer = useRef<number | null>(null);
-  const openKanjiTooltip = async (ev: React.MouseEvent, kanji: string) => {
+  const kanjiHoverTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const kanjiHideTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const openKanjiTooltip = async (ev: React.MouseEvent<HTMLButtonElement>, kanji: string) => {
     try {
       const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
       setKanjiTipPos({ x: rect.left, y: Math.max(0, rect.top - 10) });
@@ -512,8 +512,8 @@ export default function SearchBox() {
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <button className="relative text-left" title="Xem thông tin Kanji"
-                    // onMouseEnter={(e)=>{ clearTimeout(kanjiHoverTimer.current); clearTimeout(kanjiHideTimer.current); kanjiHoverTimer.current=setTimeout(()=>openKanjiTooltip(e as any, r.kanji), 0); }}
-                    // onMouseLeave={()=>{ clearTimeout(kanjiHoverTimer.current); clearTimeout(kanjiHideTimer.current); kanjiHideTimer.current=setTimeout(()=>setKanjiTipVisible(false), 120); }}
+                    onMouseEnter={(e)=>{ clearTimeout(kanjiHoverTimer.current); clearTimeout(kanjiHideTimer.current); kanjiHoverTimer.current=setTimeout(()=>openKanjiTooltip(e, r.kanji), 0); }}
+                    onMouseLeave={()=>{ clearTimeout(kanjiHoverTimer.current); clearTimeout(kanjiHideTimer.current); kanjiHideTimer.current=setTimeout(()=>setKanjiTipVisible(false), 120); }}
                   >
                     <h3 className="text-xl sm:text-2xl font-light underline decoration-dotted underline-offset-4">{r.kanji}</h3>
                   </button>
@@ -542,7 +542,7 @@ export default function SearchBox() {
 
               {/* Meaning - Larger text */}
               {r.senses?.[0]?.defs?.length && (
-                <div className="text-base font-medium mb-3 text-foreground">{capitalizeFirst(r.senses[0].defs[0] as any)}</div>
+                <div className="text-base font-medium mb-3 text-foreground">{capitalizeFirst(r.senses[0].defs[0] as string)}</div>
               )}
 
               {/* Content area - list view không hiển thị ví dụ/dịch, chuyển sang panel chi tiết */}
@@ -611,7 +611,7 @@ export default function SearchBox() {
                 <button
                   type="button"
                   className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => speakJapanese(autoDetail.reading as any).catch(console.error)}
+                  onClick={() => speakJapanese(autoDetail.reading as string).catch(console.error)}
                   title="Phát âm tiếng Nhật"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-gray-600 dark:text-gray-300">
@@ -622,7 +622,7 @@ export default function SearchBox() {
               </div>
             )}
             {autoDetail.senses?.[0]?.defs?.length && (
-              <div className="text-base font-medium mb-3">{capitalizeFirst(autoDetail.senses[0].defs[0] as any)}</div>
+              <div className="text-base font-medium mb-3">{capitalizeFirst(autoDetail.senses[0].defs[0] as string)}</div>
             )}
             {autoDetail.example && (
               <div className="mb-3">
@@ -632,7 +632,7 @@ export default function SearchBox() {
                   <button
                     type="button"
                     className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
-                    onClick={() => speakJapanese(autoDetail.example as any).catch(console.error)}
+                    onClick={() => speakJapanese(autoDetail.example as string).catch(console.error)}
                     title="Phát âm ví dụ"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-gray-600 dark:text-gray-300">
@@ -643,16 +643,16 @@ export default function SearchBox() {
                 {autoDetail.translation && (
                   <div className="mt-2 p-3 rounded-md border border-blue-400 bg-blue-50 text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300 shadow-sm">
                     <div className="font-medium mb-1">Dịch</div>
-                    <div dangerouslySetInnerHTML={{ __html: highlightVNInsensitive(autoDetail.translation, autoDetail.highlightTerm || (autoDetail.senses?.[0]?.defs?.[0] as any) || autoDetail.kanji) }} />
+                    <div dangerouslySetInnerHTML={{ __html: highlightVNInsensitive(autoDetail.translation, autoDetail.highlightTerm || (autoDetail.senses?.[0]?.defs?.[0] as string) || autoDetail.kanji) }} />
                   </div>
                 )}
               </div>
             )}
-            {(autoDetail as any).antonyms && (autoDetail as any).antonyms.length > 0 && (
-              <div className="mb-2 text-sm"><span className="font-medium">Từ trái nghĩa:</span> {(autoDetail as any).antonyms.join(', ')}</div>
+            {(autoDetail as unknown as { antonyms?: string[] }).antonyms && (autoDetail as unknown as { antonyms?: string[] }).antonyms!.length > 0 && (
+              <div className="mb-2 text-sm"><span className="font-medium">Từ trái nghĩa:</span> {(autoDetail as unknown as { antonyms: string[] }).antonyms.join(', ')}</div>
             )}
-            {(autoDetail as any).synonyms && (autoDetail as any).synonyms.length > 0 && (
-              <div className="mb-2 text-sm"><span className="font-medium">Từ đồng nghĩa:</span> {(autoDetail as any).synonyms.join(', ')}</div>
+            {(autoDetail as unknown as { synonyms?: string[] }).synonyms && (autoDetail as unknown as { synonyms?: string[] }).synonyms!.length > 0 && (
+              <div className="mb-2 text-sm"><span className="font-medium">Từ đồng nghĩa:</span> {(autoDetail as unknown as { synonyms: string[] }).synonyms.join(', ')}</div>
             )}
             <div className="text-xs text-muted-foreground mt-4 pt-2 border-t border-border">
               <div className="font-medium mb-1">Nguồn</div>
@@ -698,15 +698,15 @@ export default function SearchBox() {
         <div
           className="fixed z-50"
           style={{ left: kanjiTipPos.x, top: kanjiTipPos.y }}
-          // onMouseEnter={()=>{ clearTimeout(kanjiHideTimer.current); setKanjiTipVisible(true); }}
-          // onMouseLeave={()=>{ clearTimeout(kanjiHideTimer.current); kanjiHideTimer.current=setTimeout(()=>setKanjiTipVisible(false), 120); }}
+          onMouseEnter={()=>{ clearTimeout(kanjiHideTimer.current); setKanjiTipVisible(true); }}
+          onMouseLeave={()=>{ clearTimeout(kanjiHideTimer.current); kanjiHideTimer.current=setTimeout(()=>setKanjiTipVisible(false), 120); }}
         >
           <div className="card p-3 shadow-xl bg-popover/95 backdrop-blur border border-border min-w-[220px]">
             <div className="text-xs text-muted-foreground mb-2">Thông tin Kanji</div>
             {!kanjiInfo && (<div className="text-xs text-muted-foreground">Đang tải…</div>)}
             {kanjiInfo && (
               <div className="space-y-2 max-h=[40vh] overflow-y-auto">
-                {kanjiInfo.map((k:any) => (
+                {kanjiInfo.map((k: KanjiInfo) => (
                   <div key={k.kanji} className="border-b border-border/60 pb-1 last:border-b-0">
                     <div className="text-lg font-light mb-0.5">{k.kanji}</div>
                     <div className="text-xs text-muted-foreground">On: {k.on_readings?.join(', ') || '-'}</div>

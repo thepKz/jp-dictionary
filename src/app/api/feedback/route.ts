@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
     const db = await getDb();
     const col = db.collection<FeedbackDoc>("feedback");
-    const doc: FeedbackDoc = { email, type, message, meta, createdAt: new Date() } as any;
+    const doc: FeedbackDoc = { email, type, message, meta, createdAt: new Date() } as FeedbackDoc;
     await col.insertOne(doc);
 
     // Send email notification

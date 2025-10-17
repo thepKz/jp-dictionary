@@ -12,24 +12,25 @@
   },
   "dependencies": {
     "furigana": "^0.19.3",
+    "fuse.js": "^7.0.0",
+    "mongodb": "^6.9.0",
     "next": "15.5.5",
+    "nodemailer": "^6.9.13",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "wanakana": "^5.3.1",
-    "mongodb": "^6.9.0",
-    "nodemailer": "^6.9.13",
-    "fuse.js": "^7.0.0"
+    "wanakana": "^5.3.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.48.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.5",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "@playwright/test": "^1.48.2"
+    "typescript": "^5"
   }
 }

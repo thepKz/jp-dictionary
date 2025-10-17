@@ -24,8 +24,8 @@ export default function AdminPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Import failed");
       setMsg(`Đã nhập ${json.upserted}/${json.count}`);
-    } catch (e: any) {
-      setMsg(e.message || "Lỗi import");
+    } catch (e: unknown) {
+      setMsg((e as Error).message || "Lỗi import");
     }
     setImporting(false);
   };
@@ -100,7 +100,7 @@ export default function AdminPage() {
               const json = await res.json();
               if(!res.ok) throw new Error(json.error || 'failed');
               setMsg(`Replace Na: del ${json.deletedEntries}/${json.deletedRatings} ratings, upserted ${json.upserted}`);
-            } catch(e:any){ setMsg(e.message || 'Lỗi'); }
+            } catch(e: unknown){ setMsg((e as Error).message || 'Lỗi'); }
             setImporting(false);
           }}>Replace Na-adj (list1)</button>
           <button className="btn-secondary" onClick={async()=>{
@@ -110,7 +110,7 @@ export default function AdminPage() {
               const json = await res.json();
               if(!res.ok) throw new Error(json.error || 'failed');
               setMsg(`Replace I: del ${json.deletedEntries}/${json.deletedRatings} ratings, upserted ${json.upserted}`);
-            } catch(e:any){ setMsg(e.message || 'Lỗi'); }
+            } catch(e: unknown){ setMsg((e as Error).message || 'Lỗi'); }
             setImporting(false);
           }}>Replace I-adj (list2)</button>
         </div>

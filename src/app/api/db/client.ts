@@ -1,4 +1,4 @@
-import { MongoClient, Db, Collection } from "mongodb";
+import { MongoClient, Db, Collection, Document } from "mongodb";
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
@@ -73,7 +73,7 @@ async function ensureIndexes(database: Db) {
   await feedback.createIndex({ createdAt: -1 });
 }
 
-export function getCollection<T = unknown>(name: string): Collection<T> {
+export function getCollection<T extends Document = Document>(name: string): Collection<T> {
   if (!db) throw new Error("DB not initialized. Call getDb() first.");
   return db.collection<T>(name);
 }
