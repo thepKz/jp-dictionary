@@ -512,8 +512,8 @@ export default function SearchBox() {
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <button className="relative text-left" title="Xem thông tin Kanji"
-                    onMouseEnter={(e)=>{ clearTimeout(kanjiHoverTimer.current); clearTimeout(kanjiHideTimer.current); kanjiHoverTimer.current=setTimeout(()=>openKanjiTooltip(e as any, r.kanji), 0); }}
-                    onMouseLeave={()=>{ clearTimeout(kanjiHoverTimer.current); clearTimeout(kanjiHideTimer.current); kanjiHideTimer.current=setTimeout(()=>setKanjiTipVisible(false), 120); }}
+                    // onMouseEnter={(e)=>{ clearTimeout(kanjiHoverTimer.current); clearTimeout(kanjiHideTimer.current); kanjiHoverTimer.current=setTimeout(()=>openKanjiTooltip(e as any, r.kanji), 0); }}
+                    // onMouseLeave={()=>{ clearTimeout(kanjiHoverTimer.current); clearTimeout(kanjiHideTimer.current); kanjiHideTimer.current=setTimeout(()=>setKanjiTipVisible(false), 120); }}
                   >
                     <h3 className="text-xl sm:text-2xl font-light underline decoration-dotted underline-offset-4">{r.kanji}</h3>
                   </button>
@@ -698,8 +698,8 @@ export default function SearchBox() {
         <div
           className="fixed z-50"
           style={{ left: kanjiTipPos.x, top: kanjiTipPos.y }}
-          onMouseEnter={()=>{ clearTimeout(kanjiHideTimer.current); setKanjiTipVisible(true); }}
-          onMouseLeave={()=>{ clearTimeout(kanjiHideTimer.current); kanjiHideTimer.current=setTimeout(()=>setKanjiTipVisible(false), 120); }}
+          // onMouseEnter={()=>{ clearTimeout(kanjiHideTimer.current); setKanjiTipVisible(true); }}
+          // onMouseLeave={()=>{ clearTimeout(kanjiHideTimer.current); kanjiHideTimer.current=setTimeout(()=>setKanjiTipVisible(false), 120); }}
         >
           <div className="card p-3 shadow-xl bg-popover/95 backdrop-blur border border-border min-w-[220px]">
             <div className="text-xs text-muted-foreground mb-2">Thông tin Kanji</div>
