@@ -1,0 +1,89 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - main [ref=e3]:
+    - generic [ref=e5]:
+      - heading "Từ điển tính từ kinh tế Nhật" [level=1] [ref=e6]
+      - generic [ref=e7]:
+        - button "Cài đặt" [ref=e9]:
+          - img "Cài đặt" [ref=e10]
+        - button "Góp ý" [ref=e11]
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - heading "Tìm kiếm từ vựng" [level=2] [ref=e15]
+        - paragraph [ref=e16]: Nhập kanji, kana, romaji hoặc nghĩa tiếng Việt
+      - generic [ref=e18]:
+        - 'textbox "Ví dụ: 経済的, keizaiteki, economic..." [active] [ref=e20]': 厚い
+        - button "Tìm kiếm" [ref=e21]:
+          - img [ref=e22]
+          - generic [ref=e24]: Tìm kiếm
+      - generic [ref=e25]:
+        - generic [ref=e26]: "Kết quả:"
+        - generic [ref=e27]: 1 từ
+      - generic [ref=e28]:
+        - button "厚い" [ref=e29]
+        - button "Xóa lịch sử" [ref=e30]
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - button "厚い" [ref=e35]:
+              - heading "厚い" [level=3] [ref=e36]
+            - generic [ref=e37]: I-adj
+            - button "Phát âm tiếng Nhật" [ref=e38]:
+              - img [ref=e39]
+            - generic [ref=e41]:
+              - generic [ref=e42]:
+                - img [ref=e43] [cursor=pointer]
+                - img [ref=e45] [cursor=pointer]
+                - img [ref=e47] [cursor=pointer]
+                - img [ref=e49] [cursor=pointer]
+                - img [ref=e51] [cursor=pointer]
+              - generic [ref=e53]: 0.0 (0)
+          - generic [ref=e54]:
+            - generic [ref=e55]: あつい
+            - generic [ref=e56]: atsui
+        - generic [ref=e57]: Dày dặn
+        - generic [ref=e58]:
+          - generic [ref=e59]: "Nguồn:"
+          - generic [ref=e61]:
+            - text: 🇯🇵
+            - link "Nguồn Nhật" [ref=e62] [cursor=pointer]:
+              - /url: https://www3.nhk.or.jp/news/html/20250712/k10014861461000.html
+        - button "Chi tiết" [ref=e64]
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - generic [ref=e68]: 厚い
+          - button "×" [ref=e69]
+        - generic [ref=e70]:
+          - generic [ref=e71]: あつい · atsui
+          - button "Phát âm tiếng Nhật" [ref=e72]:
+            - img [ref=e73]
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - img [ref=e78] [cursor=pointer]
+              - img [ref=e80] [cursor=pointer]
+              - img [ref=e82] [cursor=pointer]
+              - img [ref=e84] [cursor=pointer]
+              - img [ref=e86] [cursor=pointer]
+            - generic [ref=e88]: 0.0 (0)
+        - generic [ref=e89]: Dày dặn
+        - generic [ref=e90]:
+          - generic [ref=e91]: Ví dụ
+          - generic [ref=e92]:
+            - generic [ref=e93]: 危険物がある場所で厚い防護服を着て捜査にあたる『公安機動捜査隊』の隊員などがファッションショーのように次々とステージにあがり、それぞれの仕事の魅力を紹介していました。
+            - button "Phát âm ví dụ" [ref=e94]:
+              - img [ref=e95]
+          - generic [ref=e97]:
+            - generic [ref=e98]: Dịch
+            - generic [ref=e99]: Các thành viên của "Đội điều tra cơ động công an" mặc trang phục bảo hộ dày để điều tra tại những nơi có vật liệu nguy hiểm đã lần lượt lên sân khấu như trong một buổi trình diễn thời trang và giới thiệu sự hấp dẫn của công việc của mình.
+        - generic [ref=e100]:
+          - generic [ref=e101]: Nguồn
+          - generic [ref=e103]:
+            - text: 🇯🇵
+            - link "Nguồn Nhật" [ref=e104] [cursor=pointer]:
+              - /url: https://www3.nhk.or.jp/news/html/20250712/k10014861461000.html
+  - button "Open Next.js Dev Tools" [ref=e110] [cursor=pointer]:
+    - img [ref=e111]
+  - alert [ref=e114]
+```

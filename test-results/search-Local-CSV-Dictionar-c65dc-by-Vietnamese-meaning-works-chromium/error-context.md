@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - main [ref=e3]:
     - generic [ref=e5]:
       - heading "Từ điển tính từ kinh tế Nhật" [level=1] [ref=e6]
@@ -14,7 +14,7 @@
         - heading "Tìm kiếm từ vựng" [level=2] [ref=e15]
         - paragraph [ref=e16]: Nhập kanji, kana, romaji hoặc nghĩa tiếng Việt
       - generic [ref=e18]:
-        - 'textbox "Ví dụ: 経済的, keizaiteki, economic..." [ref=e20]'
+        - 'textbox "Ví dụ: 経済的, keizaiteki, economic..." [active] [ref=e20]': nguy hiểm
         - button "Tìm kiếm" [ref=e21]:
           - img [ref=e22]
           - generic [ref=e24]: Tìm kiếm

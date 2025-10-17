@@ -9,13 +9,8 @@ export default function Home() {
               Từ điển tính từ kinh tế Nhật
             </h1>
             <div className="flex items-center gap-3">
-              <a
-                href="/all"
-                className="btn-secondary hover-lift px-3 py-1 text-sm font-light"
-              >
-                📚 Tất cả từ vựng
-              </a>
-              <ThemeToggle />
+              <SettingsMenu />
+              <HeaderFeedbackButton />
             </div>
           </div>
         </header>
@@ -32,3 +27,5 @@ export default function Home() {
 
 import ClientSearchBox from "./_components/SearchBox";
 import ThemeToggle from "./_components/ThemeToggle";
+import SettingsMenu from "./_components/SettingsMenu";
+import HeaderFeedbackButton from "./_components/HeaderFeedbackButton";

@@ -128,7 +128,7 @@ export default function DetailPanel({ entry, examples, onClose }: DetailPanelPro
                     <div key={ex.id} className="card p-4 hover-lift">
                       <div className="text-base mb-3 font-light leading-relaxed">{ex.jp.text}</div>
                       {ex.translations[0] && (
-                        <div className="text-muted-foreground border-l border-border pl-4">
+                        <div className="text-muted-foreground border-l border-border pl-4 capitalize">
                           {ex.translations[0].text}
                         </div>
                       )}

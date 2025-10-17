@@ -1,12 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
+import { getDb, EntryDoc } from "../db/client";
+import { toRomaji } from "wanakana";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").trim();
   // Empty query shows all entries
   if (!q) {
+    try {
+      const db = await getDb();
+      const col = db.collection<EntryDoc>("entries");
+      const docs = await col
+        .find({}, { projection: { _id: 0 } })
+        .limit(500)
+        .toArray();
+      const data = docs.map(normalizeDocToResult);
+      if (data.length > 0) {
+        return NextResponse.json({ data, q: "", source: "db", count: data.length });
+      }
+    } catch {}
+
+    // Fallback to local CSV
     try {
       const allData = searchLocalCsv("");
       return NextResponse.json({ data: allData, q: "", source: "local", count: allData.length });
@@ -25,6 +41,47 @@ export async function GET(req: NextRequest) {
   if (!rateLimitAllow(ip)) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
+
+  try {
+    const db = await getDb();
+    const col = db.collection<EntryDoc>("entries");
+    const regex = buildLooseRegex(q);
+    const docs = await col
+      .find(
+        {
+          $or: [
+            { kanji: { $regex: regex } },
+            { reading: { $regex: regex } },
+            { meaning: { $regex: regex } },
+          ],
+        },
+        { projection: { _id: 0 } }
+      )
+      .limit(100)
+      .toArray();
+    // Extra Vietnamese diacritics/space-insensitive match
+    const qNorm = normalizeVi(q);
+    const viMatched = docs.filter(d => normalizeVi(d.meaning || "").includes(qNorm));
+    let data = (viMatched.length > 0 ? viMatched : docs).map(normalizeDocToResult);
+    if (data.length > 0) {
+      const payload = { q, source: "db", count: data.length, data };
+      putInCache(cacheKey, payload);
+      return NextResponse.json(payload);
+    }
+    // Romaji fallback: scan all entries and match toRomaji(reading)
+    const allDocs = await col.find({}, { projection: { _id: 0 } }).limit(2000).toArray();
+    const romajiQLower = q.toLowerCase();
+    const romajiMatches = allDocs.filter((e) => {
+      const r = (e.reading || "").toString();
+      return toRomaji(r).toLowerCase().includes(romajiQLower);
+    });
+    data = romajiMatches.map(normalizeDocToResult);
+    if (data.length > 0) {
+      const payload = { q, source: "db-romaji", count: data.length, data };
+      putInCache(cacheKey, payload);
+      return NextResponse.json(payload);
+    }
+  } catch {}
 
   try {
     const filtered = searchLocalCsv(q);
@@ -191,8 +248,10 @@ function searchLocalCsv(q: string) {
     if (e.reading.toLowerCase().includes(queryLower)) return true;
     if (e.meaning.toLowerCase().includes(queryLower)) return true;
     
-    // Romaji search support - simplified for server-side
-    // Note: Full romaji search is handled on the client side
+    // Romaji search support: convert reading to romaji and match
+    try {
+      if (toRomaji(e.reading || "").toLowerCase().includes(queryLower)) return true;
+    } catch {}
     
     return false;
   });
@@ -212,6 +271,58 @@ function searchLocalCsv(q: string) {
     linkJP: e.linkJP,
     linkVN: e.linkVN,
   }));
+}
+
+function normalizeDocToResult(e: EntryDoc) {
+  return {
+    kanji: e.kanji,
+    reading: e.reading,
+    isCommon: false,
+    senses: [
+      {
+        pos: Array.isArray(e.pos) ? e.pos : [],
+        defs: [e.meaning].filter(Boolean),
+        tags: [],
+      },
+    ],
+    example: e.example,
+    translation: e.translation,
+    linkJP: e.linkJP,
+    linkVN: e.linkVN,
+    antonyms: e.antonyms,
+    synonyms: (e as any).synonyms,
+    highlightTerm: (e as any).highlightTerm,
+  };
+}
+
+function buildLooseRegex(q: string) {
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Convert Vietnamese diacritics to loose classes (basic): áàảãạ -> a, ê -> e, ô/ơ -> o, ư -> u, đ -> d
+  const map: Record<string, string> = {
+    a: "[aàáảãạăắằẳẵặâấầẩẫậ]",
+    e: "[eèéẻẽẹêếềểễệ]",
+    i: "[iìíỉĩị]",
+    o: "[oòóỏõọôốồổỗộơớờởỡợ]",
+    u: "[uùúủũụưứừửữự]",
+    y: "[yỳýỷỹỵ]",
+    d: "[dđ]",
+  };
+  let pattern = "";
+  for (const ch of escaped) {
+    const lower = ch.toLowerCase();
+    if (map[lower]) pattern += map[lower];
+    else pattern += ch;
+  }
+  return new RegExp(pattern, "i");
+}
+
+function normalizeVi(text: string) {
+  if (!text) return "";
+  // NFC to reduce edge cases, then strip diacritics and spaces
+  const nfc = text.normalize('NFC').toLowerCase();
+  const noMarks = nfc.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const noSpace = noMarks.replace(/\s+/g, '');
+  return noSpace;
 }
 
 

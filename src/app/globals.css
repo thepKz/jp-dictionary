@@ -44,6 +44,7 @@
   --font-sans: 'Noto Sans JP', 'Meiryo', 'Hiragino Kaku Gothic Pro', 'Yu Gothic', 'MS PGothic', Osaka, sans-serif;
   --font-serif: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', 'MS PMincho', serif;
   --font-mono: var(--font-mono);
+  --font-size-base: 16px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -116,6 +117,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-size: var(--font-size-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -155,6 +157,15 @@ body {
   animation: fadeIn 0.2s ease-out;
 }
 
+@keyframes pop {
+  0% { transform: scale(0.98); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-pop {
+  animation: pop 0.15s ease-out;
+}
+
 /* Clean hover effects */
 .hover-lift {
   transition: transform 0.2s ease;
@@ -162,6 +173,19 @@ body {
 
 .hover-lift:hover {
   transform: translateY(-1px);
+}
+
+.hover-glow {
+  transition: box-shadow 0.2s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 4px 16px rgba(96,165,250,0.25);
+}
+
+/* Make dark-theme icons white while keeping original in light mode */
+[data-theme="dark"] .icon-invert-dark {
+  filter: invert(1) brightness(1.8);
 }
 
 /* Modern button styles */
@@ -195,8 +219,10 @@ body {
 
 /* Card styles */
 .card {
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--card) 85%, transparent);
+  backdrop-filter: saturate(1.1) blur(4px);
+  -webkit-backdrop-filter: saturate(1.1) blur(4px);
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
   border-radius: var(--radius);
   transition: all 0.2s ease;
 }
@@ -233,6 +259,7 @@ body {
   font-size: 1rem;
   transition: all 0.2s ease;
   width: 100%;
+  text-transform: none;
 }
 
 .input:focus {

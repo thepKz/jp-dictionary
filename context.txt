@@ -1,0 +1,57 @@
+Responsive Design- Looks great on desktops, laptops, tablets and mobiles. 
+Dưới đây là prompt nâng cấp dành cho dự án web từ điển Node.js chuyên tính từ kinh tế tiếng Nhật, đã bổ sung về trải nghiệm chữ viết, UI và khai thác đa API:
+
+***
+
+### Prompt phát triển dự án từ điển tiếng Nhật chuyên tính từ kinh tế
+
+1. **Xây dựng website từ điển kinh tế tiếng Nhật bằng Node.js (Express hoặc Next.js):**
+   - Giao diện hiện đại, rõ ràng, chỉ tập trung vào tính từ về kinh tế.
+   - Hỗ trợ chuyển đổi light/dark mode, tự động responsive cho mobile/desktop.
+
+2. **Kết nối đa nguồn dữ liệu từ điển:**
+   - Dùng thư viện `jmdict-simplified-node` (npm) hoặc kết nối API công khai như Jotoba ([https://github.com/thepKz/Jotoba](https://github.com/thepKz/Jotoba)), JMdict online.
+   - Cho phép cấu hình thêm API mở (Jisho.org API, Tatoeba API...) để lấy ví dụ thực tế và phát âm.
+
+3. **Chức năng tìm kiếm nâng cao, chỉ lọc tính từ kinh tế:**
+   - Tất cả dữ liệu đều lọc theo loại từ (tính từ) và tag/keyword chuyên ngành kinh tế (ví dụ: 経済的, 金融的, 商業的, 国際的, 消費的).
+   - Có thể thêm preset các tính từ kinh tế chuẩn, khi mới khởi tạo web (seeded data).
+   - Tìm kiếm theo kanji, furigana, romaji và cả nghĩa tiếng Việt/Anh.
+
+4. **Trình bày chi tiết mỗi kết quả gồm:**
+   - Kanji, furigana nếu có, loại tính từ.
+   - Nghĩa tiếng Việt (hoặc tiếng Anh).
+   - Ví dụ sử dụng trong ngữ cảnh kinh tế, có cả nguồn trích dẫn.
+   - Phiên âm (romaji), nút copy, phát âm audio nếu API trả về.
+   - Tag tính từ chuyên ngành / phổ biến.
+
+5. **Nâng cấp giao diện chữ và font:**
+   - Tích hợp Google Fonts với Noto Sans JP cho toàn trang; Có thể chuyển sang Noto Serif JP hoặc Zen Kaku Gothic cho tiêu đề/điểm nhấn.
+   - CSS khai báo:
+     ```css
+     font-family: 'Noto Sans JP', 'Meiryo', 'Hiragino Kaku Gothic Pro', Osaka, sans-serif;
+     ```
+   - Card-style UI, màu trắng/xám hiện đại, section rõ ràng, nút phát âm, yêu thích.
+
+6. **Các chức năng chính khác:**
+   - Thanh tìm kiếm auto-complete, gợi ý nhanh (từ chuẩn về kinh tế).
+   - Chế độ hiển thị giản lược (chỉ kanji/nghĩa) và chi tiết (có ví dụ, audio, tag).
+   - Cấu trúc code rõ ràng, bổ sung contributor guideline về cách mở rộng bộ tính từ hoặc thêm chủ đề từ mới chuyên ngành khác.
+
+7. **License và nguồn dữ liệu:**
+   - Bảo đảm tuân thủ AGPL 3.0 (cho Jotoba/lib gốc) và dẫn nguồn dữ liệu đúng quy định các API liên kết.
+
+***
+
+#### Ví dụ tính từ mẫu:
+- 経済的 (keizaiteki) – thuộc về kinh tế~
+- 金融的 (kin'yūteki) – thuộc về tài chính/ngân hàng
+- 商業的 (shōgyōteki) – mang tính thương mại
+- 国際的 (kokusai-teki) – mang tính quốc tế
+- 消費的 (shōhi-teki) – liên quan tiêu thụ
+- 効率的 (kōritsu-teki) – mang tính hiệu quả
+- 合理的 (gōri-teki) – mang tính hợp lý
+
+> **Yêu cầu**: Chỉ hiển thị tính từ kinh tế, ẩn các loại khác để đúng trọng tâm. Ưu tiên trải nghiệm chữ đẹp, rõ ràng nhờ các font hiện đại của Google Fonts và CSS chuẩn Nhật.
+
+Best option for you to explore: Hãy kết nối đồng thời nhiều nguồn API Nhật, chọn filter cẩn thận để dữ liệu đẹp, chú ý tối ưu UI qua font đẹp như Noto Sans JP. Nếu muốn nổi bật hơn nữa, thêm cả khả năng đổi theme và chia sẻ nhanh từ vựng lên mạng xã hội cho cộng đồng học tiếng Nhật chuyên ngành kinh tế.

@@ -257,9 +257,10 @@ export default function AllWords() {
                         dangerouslySetInnerHTML={{ __html: highlightText(r.example, r.kanji) }}
                       />
                       {r.translation && (
-                        <div className="text-xs text-blue-600 italic">
+                        <div className="mt-2 p-3 rounded-md border border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300 shadow-sm animate-pop">
                           <div className="font-medium mb-1">Dịch:</div>
                           <div 
+                            className="leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: highlightText(r.translation, r.kanji) }}
                           />
                         </div>
