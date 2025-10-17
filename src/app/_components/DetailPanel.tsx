@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toRomaji } from "wanakana";
 
 type SearchResult = {
@@ -26,6 +26,26 @@ export default function DetailPanel({ entry, examples, onClose }: DetailPanelPro
     try { return JSON.parse(localStorage.getItem("favorites") || "{}"); } catch { return {}; }
   });
 
+  // Kanji hover functionality
+  type KanjiInfo = { kanji: string; on_readings?: string[]; kun_readings?: string[]; meanings?: string[]; stroke_count?: number };
+  const [kanjiInfo, setKanjiInfo] = useState<KanjiInfo[] | null>(null);
+  const [kanjiTipPos, setKanjiTipPos] = useState<{x:number;y:number}|null>(null);
+  const [kanjiTipVisible, setKanjiTipVisible] = useState(false);
+  const kanjiHoverTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  const kanjiHideTimer = useRef<NodeJS.Timeout | undefined>(undefined);
+  
+  const openKanjiTooltip = async (ev: React.MouseEvent<HTMLButtonElement>, kanji: string) => {
+    try {
+      const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
+      setKanjiTipPos({ x: rect.left, y: Math.max(0, rect.top - 10) });
+      setKanjiInfo(null);
+      setKanjiTipVisible(true);
+      const res = await fetch(`/api/kanji?c=${encodeURIComponent(kanji)}`);
+      const json = await res.json();
+      setKanjiInfo(json.data || null);
+    } catch {}
+  };
+
   const playAudio = async () => {
     if (!entry.audio?.[0]) return;
     setPlayingAudio(true);
@@ -45,7 +65,14 @@ export default function DetailPanel({ entry, examples, onClose }: DetailPanelPro
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-4xl font-light mb-2">{entry.kanji}</h2>
+              <button 
+                className="relative text-left" 
+                title="Xem thông tin Kanji"
+                onMouseEnter={(e)=>{ clearTimeout(kanjiHoverTimer.current); clearTimeout(kanjiHideTimer.current); kanjiHoverTimer.current=setTimeout(()=>openKanjiTooltip(e, entry.kanji), 0); }}
+                onMouseLeave={()=>{ clearTimeout(kanjiHoverTimer.current); clearTimeout(kanjiHideTimer.current); kanjiHideTimer.current=setTimeout(()=>setKanjiTipVisible(false), 120); }}
+              >
+                <h2 className="text-4xl font-light mb-2 underline decoration-dotted underline-offset-4 hover:text-primary transition-colors">{entry.kanji}</h2>
+              </button>
               {entry.reading && (
                 <div className="text-xl text-muted-foreground font-light">{entry.reading}</div>
               )}
@@ -63,15 +90,15 @@ export default function DetailPanel({ entry, examples, onClose }: DetailPanelPro
             {/* Reading and Romaji */}
             {entry.reading && (
               <div className="card p-6">
-                <h3 className="text-lg font-light mb-4">Cách đọc</h3>
+                <h3 className="text-lg font-light mb-4 text-foreground">Cách đọc</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Hiragana</div>
-                    <div className="text-2xl text-muted-foreground font-light">{entry.reading}</div>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-2 font-medium">Hiragana</div>
+                    <div className="text-2xl text-foreground font-medium">{entry.reading}</div>
                   </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Romaji</div>
-                    <div className="text-2xl font-mono font-light">{toRomaji(entry.reading)}</div>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-2 font-medium">Romaji</div>
+                    <div className="text-2xl font-mono text-foreground font-medium">{toRomaji(entry.reading)}</div>
                   </div>
                 </div>
               </div>
@@ -79,22 +106,22 @@ export default function DetailPanel({ entry, examples, onClose }: DetailPanelPro
 
             {/* Meanings */}
             <div className="card p-6">
-              <h3 className="text-lg font-light mb-4">Nghĩa và cách sử dụng</h3>
+              <h3 className="text-lg font-light mb-4 text-foreground">Nghĩa và cách sử dụng</h3>
               <div className="space-y-4">
                 {entry.senses.map((sense, idx) => (
-                  <div key={idx} className="border-l border-border pl-6 py-4">
+                  <div key={idx} className="border-l-2 border-primary/30 pl-6 py-4 bg-muted/30 rounded-r-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="badge badge-secondary">{sense.pos.join(", ")}</span>
                       {entry.isCommon && (
                         <span className="badge badge-secondary">Phổ biến</span>
                       )}
                     </div>
-                    <div className="text-base leading-relaxed font-light">
+                    <div className="text-base leading-relaxed font-medium text-foreground">
                       {sense.defs.join(", ")}
                     </div>
                     {sense.tags.length > 0 && (
                       <div className="mt-2 text-sm text-muted-foreground">
-                        <span className="font-light">Tags:</span> {sense.tags.join(", ")}
+                        <span className="font-medium">Tags:</span> {sense.tags.join(", ")}
                       </div>
                     )}
                   </div>
@@ -122,14 +149,20 @@ export default function DetailPanel({ entry, examples, onClose }: DetailPanelPro
             {/* Examples */}
             {examples.length > 0 && (
               <div className="card p-6">
-                <h3 className="text-lg font-light mb-4">Ví dụ sử dụng</h3>
+                <h3 className="text-lg font-light mb-4 text-foreground">Ví dụ sử dụng</h3>
                 <div className="space-y-4">
                   {examples.map((ex) => (
-                    <div key={ex.id} className="card p-4 hover-lift">
-                      <div className="text-base mb-3 font-light leading-relaxed">{ex.jp.text}</div>
+                    <div key={ex.id} className="space-y-3">
+                      <div className="example-text">
+                        <div className="text-sm font-medium mb-2 text-amber-700 dark:text-amber-300">Ví dụ</div>
+                        <div className="text-base leading-relaxed">{ex.jp.text}</div>
+                      </div>
                       {ex.translations[0] && (
-                        <div className="text-muted-foreground border-l border-border pl-4 capitalize">
-                          {ex.translations[0].text}
+                        <div className="translation-text">
+                          <div className="text-sm font-medium mb-2 text-blue-700 dark:text-blue-300">Dịch</div>
+                          <div className="text-base leading-relaxed capitalize">
+                            {ex.translations[0].text}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -177,6 +210,34 @@ export default function DetailPanel({ entry, examples, onClose }: DetailPanelPro
           </div>
         </div>
       </div>
+
+      {/* Kanji Tooltip */}
+      {kanjiTipVisible && kanjiTipPos && (
+        <div
+          className="fixed z-50"
+          style={{ left: kanjiTipPos.x, top: kanjiTipPos.y }}
+          onMouseEnter={()=>{ clearTimeout(kanjiHideTimer.current); setKanjiTipVisible(true); }}
+          onMouseLeave={()=>{ clearTimeout(kanjiHideTimer.current); kanjiHideTimer.current=setTimeout(()=>setKanjiTipVisible(false), 120); }}
+        >
+          <div className="card p-3 shadow-xl bg-card/95 backdrop-blur border border-border min-w-[220px]">
+            <div className="text-xs text-muted-foreground mb-2">Thông tin Kanji</div>
+            {!kanjiInfo && (<div className="text-xs text-muted-foreground">Đang tải…</div>)}
+            {kanjiInfo && (
+              <div className="space-y-2 max-h-[40vh] overflow-y-auto">
+                {kanjiInfo.map((k: KanjiInfo) => (
+                  <div key={k.kanji} className="border-b border-border/60 pb-1 last:border-b-0">
+                    <div className="text-lg font-light mb-0.5">{k.kanji}</div>
+                    <div className="text-xs text-muted-foreground">On: {k.on_readings?.join(', ') || '-'}</div>
+                    <div className="text-xs text-muted-foreground">Kun: {k.kun_readings?.join(', ') || '-'}</div>
+                    <div className="text-xs">Nghĩa: {(k.meanings||[]).join(', ')}</div>
+                    <div className="text-xs">Số nét: {k.stroke_count}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
