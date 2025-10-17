@@ -22,8 +22,10 @@ export async function POST(req: NextRequest) {
     const kanji: string = (body.kanji || "").trim();
     if (!kanji) return NextResponse.json({ error: "kanji required" }, { status: 400 });
     const update: Partial<EntryDoc> = {};
-    ["reading","meaning","example","translation","linkJP","linkVN","adjType"].forEach((k)=>{
-      if (body[k] !== undefined) (update as any)[k] = body[k];
+    (['reading','meaning','example','translation','linkJP','linkVN','adjType'] as Array<keyof EntryDoc | 'adjType'>).forEach((k)=>{
+      if ((body as Record<string, unknown>)[k] !== undefined) {
+        (update as Record<string, unknown>)[k] = (body as Record<string, unknown>)[k];
+      }
     });
     if (Array.isArray(body.antonyms)) update.antonyms = body.antonyms.filter((s:string)=>!!s);
     if (Array.isArray(body.synonyms)) update.synonyms = body.synonyms.filter((s:string)=>!!s);

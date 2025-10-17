@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     let deletedEntries = 0;
     let deletedRatings = 0;
     if (mode === "replace") {
-      let filter: any = {};
+      let filter: Record<string, unknown> = {};
       if (scope === "na") filter = { adjType: "na" };
       else if (scope === "i") filter = { adjType: "i" };
 
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
         upsert: true,
       },
     }));
-    const wres = ops.length ? await col.bulkWrite(ops, { ordered: false }) : { upsertedCount: 0, modifiedCount: 0 } as any;
+    const wres: { upsertedCount?: number; modifiedCount?: number } = ops.length ? await col.bulkWrite(ops, { ordered: false }) : { upsertedCount: 0, modifiedCount: 0 } as { upsertedCount: number; modifiedCount: number };
     const upserted = (wres.upsertedCount || 0) + (wres.modifiedCount || 0);
 
     return NextResponse.json({ ok: true, count: entries.length, upserted, deletedEntries, deletedRatings, mode, scope });

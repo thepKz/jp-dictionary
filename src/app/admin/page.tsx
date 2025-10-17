@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Stat = {
   entries: number;
@@ -14,7 +14,8 @@ export default function AdminPage() {
   const [msg, setMsg] = useState("");
   const [filter, setFilter] = useState<'all'|'na'|'i'>('all');
   const [editKanji, setEditKanji] = useState("");
-  const [entry, setEntry] = useState<any>(null);
+  type AdminEntry = { reading?: string; meaning?: string; example?: string; translation?: string; antonyms?: string[]; synonyms?: string[] } | null;
+  const [entry, setEntry] = useState<AdminEntry>(null);
 
   const importCsv = async () => {
     setImporting(true); setMsg("");

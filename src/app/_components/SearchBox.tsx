@@ -113,7 +113,7 @@ const speakJapanese = (text: string): Promise<void> => {
     };
     
     pickVoice().finally(() => {
-      try { speechSynthesis.speak(utterance); } catch (e) { isSpeaking = false; reject(e as any); }
+      try { speechSynthesis.speak(utterance); } catch (e) { isSpeaking = false; reject(e as Error); }
     });
   });
 };
@@ -190,12 +190,11 @@ const highlightVNInsensitive = (text: string, termRaw: string) => {
   if (idx === -1) return text;
   // Map indices back by walking original and building positions
   const mapPos: number[] = [];
-  for (let i = 0, j = 0; i < original.length; i += 1) {
+  for (let i = 0; i < original.length; i += 1) {
     const ch = original[i];
     const base = stripVi(ch);
     if (base) {
       for (let k = 0; k < base.length; k += 1) mapPos.push(i);
-      j += base.length;
     }
   }
   const startOrig = mapPos[idx] ?? 0;
@@ -344,11 +343,12 @@ export default function SearchBox() {
     setLastSearched(suggestion.kanji);
   };
 
-  const [kanjiInfo, setKanjiInfo] = useState<any[] | null>(null);
+  type KanjiInfo = { kanji: string; on_readings?: string[]; kun_readings?: string[]; meanings?: string[]; stroke_count?: number };
+  const [kanjiInfo, setKanjiInfo] = useState<KanjiInfo[] | null>(null);
   const [kanjiTipPos, setKanjiTipPos] = useState<{x:number;y:number}|null>(null);
   const [kanjiTipVisible, setKanjiTipVisible] = useState(false);
-  const kanjiHoverTimer = useRef<any>(null);
-  const kanjiHideTimer = useRef<any>(null);
+  const kanjiHoverTimer = useRef<number | null>(null);
+  const kanjiHideTimer = useRef<number | null>(null);
   const openKanjiTooltip = async (ev: React.MouseEvent, kanji: string) => {
     try {
       const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();

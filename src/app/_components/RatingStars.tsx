@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Props = { kanji: string };
 
@@ -10,16 +10,16 @@ export default function RatingStars({ kanji }: Props) {
   const [myScore, setMyScore] = useState<number | null>(null);
   const [hover, setHover] = useState<number | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/ratings?kanji=${encodeURIComponent(kanji)}`);
       const json = await res.json();
       setAvg(json.avg || 0);
       setCount(json.count || 0);
     } catch {}
-  };
+  }, [kanji]);
 
-  useEffect(() => { load(); }, [kanji]);
+  useEffect(() => { load(); }, [load]);
 
   const rate = async (score: number) => {
     setMyScore(score);

@@ -290,8 +290,8 @@ function normalizeDocToResult(e: EntryDoc) {
     linkJP: e.linkJP,
     linkVN: e.linkVN,
     antonyms: e.antonyms,
-    synonyms: (e as any).synonyms,
-    highlightTerm: (e as any).highlightTerm,
+    synonyms: (e as unknown as { synonyms?: string[] }).synonyms,
+    highlightTerm: (e as unknown as { highlightTerm?: string }).highlightTerm,
   };
 }
 
