@@ -12,17 +12,8 @@ export type EntryDoc = {
   linkJP?: string;
   linkVN?: string;
   pos?: string[];
-  antonyms?: string[];
   adjType?: 'na' | 'i';
-  synonyms?: string[];
   highlightTerm?: string;
-};
-
-export type RatingDoc = {
-  kanji: string;
-  score: number; // 1-5
-  ipHash: string;
-  createdAt: Date;
 };
 
 export type FeedbackDoc = {
@@ -33,6 +24,23 @@ export type FeedbackDoc = {
   createdAt: Date;
 };
 
+export type AdminLogDoc = {
+  action: 'import' | 'export' | 'create' | 'update' | 'delete' | 'login' | 'logout' | 'email_reply';
+  user: string; // admin username or IP
+  details: {
+    mode?: 'append' | 'replace';
+    adjType?: 'na' | 'i' | 'auto';
+    count?: number;
+    fileName?: string;
+    kanji?: string;
+    email?: string;
+    subject?: string;
+  };
+  ip?: string;
+  userAgent?: string;
+  timestamp: Date;
+};
+
 const DB_NAME = process.env.MONGODB_DB || "jp_econ_dict";
 
 export async function getDb(): Promise<Db> {
@@ -40,12 +48,12 @@ export async function getDb(): Promise<Db> {
   const uri = process.env.MONGODB_URI;
   if (!uri) throw new Error("MONGODB_URI is not set");
   // Attempt connect; if password contains '@@', auto-fix to '%40@'
-  let lastErr: unknown = null;
+  // let lastErr: unknown = null;
   try {
     if (!client) client = new MongoClient(uri, {});
     await client.connect();
   } catch (e) {
-    lastErr = e;
+    // lastErr = e;
     if (uri.includes('@@')) {
       const fixedUri = uri.replace('@@', '%40@');
       client = new MongoClient(fixedUri, {});
@@ -64,13 +72,15 @@ async function ensureIndexes(database: Db) {
   await entries.createIndex({ kanji: 1 }, { unique: true });
   await entries.createIndex({ reading: 1 });
   await entries.createIndex({ meaning: "text" });
-
-  const ratings = database.collection<RatingDoc>("ratings");
-  await ratings.createIndex({ kanji: 1 });
-  await ratings.createIndex({ ipHash: 1, kanji: 1 });
+  await entries.createIndex({ adjType: 1 });
 
   const feedback = database.collection<FeedbackDoc>("feedback");
   await feedback.createIndex({ createdAt: -1 });
+
+  const adminLogs = database.collection<AdminLogDoc>("admin_logs");
+  await adminLogs.createIndex({ timestamp: -1 });
+  await adminLogs.createIndex({ action: 1 });
+  await adminLogs.createIndex({ user: 1 });
 }
 
 export function getCollection<T extends Document = Document>(name: string): Collection<T> {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, EntryDoc, RatingDoc } from "../../db/client";
+import { getDb, EntryDoc } from "../../db/client";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,10 +8,8 @@ export async function POST(req: NextRequest) {
     if (!kanji) return NextResponse.json({ error: "kanji required" }, { status: 400 });
     const db = await getDb();
     const entries = db.collection<EntryDoc>("entries");
-    const ratings = db.collection<RatingDoc>("ratings");
     const delEntry = await entries.deleteOne({ kanji });
-    const delRatings = await ratings.deleteMany({ kanji });
-    return NextResponse.json({ ok: true, deletedEntry: delEntry.deletedCount, deletedRatings: delRatings.deletedCount });
+    return NextResponse.json({ ok: true, deletedEntry: delEntry.deletedCount });
   } catch {
     return NextResponse.json({ error: "failed" }, { status: 500 });
   }

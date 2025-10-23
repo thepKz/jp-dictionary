@@ -65,18 +65,18 @@ export default function SettingsMenu() {
         <img src="/settings.png" alt="Cài đặt" width={18} height={18} className="opacity-80 icon-invert-dark" />
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-72 z-20 card p-4 animate-pop">
+        <div className="absolute right-0 sm:right-0 left-4 sm:left-auto mt-2 w-[calc(100vw-2rem)] sm:w-72 z-50 card p-4 animate-pop">
           <div className="text-sm font-medium mb-3">Cài đặt hiển thị</div>
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="text-xs text-muted-foreground">Giao diện</div>
-              <button className="w-full btn-secondary px-3 py-2" onClick={toggleTheme}>Đổi Dark/Light</button>
+              <button className="w-full btn-secondary px-3 py-2 min-h-[44px]" onClick={toggleTheme}>Đổi Dark/Light</button>
             </div>
             <div className="space-y-2">
               <div className="text-xs text-muted-foreground">Cỡ chữ</div>
               <div className="flex items-center justify-center gap-2 w-full">
                 <button
-                  className="inline-flex w-9 h-9 items-center justify-center rounded-md border border-border text-lg"
+                  className="inline-flex w-11 h-11 sm:w-9 sm:h-9 items-center justify-center rounded-md border border-border text-lg min-h-[44px] sm:min-h-[36px]"
                   onClick={() => setSizeIdx(Math.max(0, sizeIdx - 1))}
                   aria-label="Giảm cỡ chữ"
                 >-</button>
@@ -84,14 +84,14 @@ export default function SettingsMenu() {
                   className="tabular-nums font-semibold"
                   style={{
                     fontSize: `${Math.max(parseInt(FONT_SIZES[sizeIdx] || FONT_SIZES[1], 10) + 3, 18)}px`,
-                    minWidth: "34px",
+                    minWidth: "40px",
                     textAlign: "center"
                   }}
                 >
                   {FONT_SIZES[sizeIdx] || FONT_SIZES[1]}
                 </div>
                 <button
-                  className="inline-flex w-9 h-9 items-center justify-center rounded-md border border-border text-lg"
+                  className="inline-flex w-11 h-11 sm:w-9 sm:h-9 items-center justify-center rounded-md border border-border text-lg min-h-[44px] sm:min-h-[36px]"
                   onClick={() => setSizeIdx(Math.min(FONT_SIZES.length - 1, sizeIdx + 1))}
                   aria-label="Tăng cỡ chữ"
                 >+</button>
@@ -99,7 +99,7 @@ export default function SettingsMenu() {
             </div>
             <div className="space-y-2">
               <div className="text-xs text-muted-foreground">Font</div>
-              <select className="input" value={fontIdx} onChange={(e) => setFontIdx(parseInt(e.target.value, 10))}>
+              <select className="input min-h-[44px]" value={fontIdx} onChange={(e) => setFontIdx(parseInt(e.target.value, 10))}>
                 {FONTS.map((f, i) => (<option key={f.label} value={i}>{f.label}</option>))}
               </select>
             </div>

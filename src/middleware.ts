@@ -3,28 +3,27 @@ import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  
+  // Allow login page and login API
+  if (pathname === "/admin/login" || pathname === "/api/admin/login") {
+    return NextResponse.next();
+  }
+  
   const needsAuth = pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
   if (!needsAuth) return NextResponse.next();
 
-  const header = req.headers.get("authorization");
-  if (!header || !header.startsWith("Basic ")) {
-    return unauthorized();
+  // Check for admin auth token in cookies
+  const adminAuth = req.cookies.get("adminAuth")?.value;
+  if (adminAuth === "true") {
+    return NextResponse.next();
   }
-  try {
-    const decoded = Buffer.from(header.replace("Basic ", ""), "base64").toString("utf8");
-    const [user, pass] = decoded.split(":");
-    if (user === "admin" && pass === "Admin@123") {
-      return NextResponse.next();
-    }
-  } catch {}
-  return unauthorized();
-}
 
-function unauthorized() {
-  return new NextResponse("Unauthorized", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Admin"' },
-  });
+  // Redirect to login page for admin routes
+  if (pathname.startsWith("/admin")) {
+    return NextResponse.redirect(new URL("/admin/login", req.url));
+  }
+
+  return new NextResponse("Unauthorized", { status: 401 });
 }
 
 export const config = {

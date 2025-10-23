@@ -1,126 +1,1277 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import DataTable, { TableColumn, TableData, PaginationInfo } from "../_components/DataTable";
+import EmailReplyDialog from "../_components/EmailReplyDialog";
+
+type Entry = {
+  kanji: string;
+  reading: string;
+  meaning: string;
+  example?: string;
+  translation?: string;
+  linkJP?: string;
+  linkVN?: string;
+  highlightTerm?: string;
+  adjType?: 'na' | 'i';
+};
 
 type Stat = {
-  entries: number;
-  ratings: number;
-  feedback: number;
+  entries: {
+    total: number;
+    na: number;
+    i: number;
+    untyped: number;
+  };
+  feedback: {
+    total: number;
+    recent: number;
+  };
+  recentEntries: Array<Entry>;
+  recentFeedback: Array<{
+    _id: string;
+    type: string;
+    email?: string;
+    message: string;
+    createdAt: string;
+  }>;
 };
 
 export default function AdminPage() {
   const [stats, setStats] = useState<Stat | null>(null);
-  const [importing, setImporting] = useState(false);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [filter, setFilter] = useState<'all'|'na'|'i'>('all');
-  const [editKanji, setEditKanji] = useState("");
-  type AdminEntry = { reading?: string; meaning?: string; example?: string; translation?: string; antonyms?: string[]; synonyms?: string[] } | null;
-  const [entry, setEntry] = useState<AdminEntry>(null);
+  const [activeTab, setActiveTab] = useState<'stats' | 'entries' | 'na-table' | 'i-table' | 'feedback' | 'logs'>('stats');
+  const [filter, setFilter] = useState<'all' | 'na' | 'i' | 'missing-jp-link' | 'missing-vn-link' | 'missing-highlight' | 'missing-example' | 'missing-translation' | 'untyped' | 'complete'>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("kanji");
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [feedback, setFeedback] = useState<Array<{
+    _id: string;
+    type: string;
+    email?: string;
+    message: string;
+    createdAt: string;
+  }>>([]);
+  const [feedbackPagination, setFeedbackPagination] = useState<PaginationInfo | null>(null);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [selectedFeedback, setSelectedFeedback] = useState<{
+    _id: string;
+    type: string;
+    email?: string;
+    message: string;
+    createdAt: string;
+  } | null>(null);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importMode, setImportMode] = useState<'append' | 'replace'>('append');
+  const [importAdjType, setImportAdjType] = useState<'na' | 'i' | 'auto'>('auto');
+  const [logs, setLogs] = useState<Array<{
+    _id: string;
+    action: string;
+    user: string;
+    details: Record<string, unknown>;
+    ip?: string;
+    userAgent?: string;
+    timestamp: string;
+  }>>([]);
+  const [logsPagination, setLogsPagination] = useState<PaginationInfo | null>(null);
+  const [logsLoading, setLogsLoading] = useState(false);
 
-  const importCsv = async () => {
-    setImporting(true); setMsg("");
+  // Toggle expanded state for items
+  const toggleExpanded = (itemId: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId);
+    } else {
+      newExpanded.add(itemId);
+    }
+    setExpandedItems(newExpanded);
+  };
+
+  // Expandable text component
+  const ExpandableText = ({ text, maxLength = 40, itemId }: { text: string; maxLength?: number; itemId: string }) => {
+    if (!text || text.length <= maxLength) {
+      return <span className="text-xs text-gray-600 leading-tight">{text || '-'}</span>;
+    }
+
+    const isExpanded = expandedItems.has(itemId);
+    const displayText = isExpanded ? text : text.substring(0, maxLength) + '...';
+
+    return (
+      <div className="text-xs text-gray-600 leading-tight">
+        <span>{displayText}</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleExpanded(itemId);
+          }}
+          className="ml-1 text-blue-600 hover:text-blue-800 underline text-xs"
+        >
+          {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+        </button>
+      </div>
+    );
+  };
+
+  // Table columns configuration
+  const columns: TableColumn[] = [
+    {
+      key: 'kanji',
+      label: 'Kanji',
+      sortable: true,
+      width: 'min(120px, 15vw)',
+      render: (value) => (
+        <span className="font-semibold text-sm sm:text-lg whitespace-nowrap">{String(value || '')}</span>
+      )
+    },
+    {
+      key: 'reading',
+      label: 'Cách đọc',
+      sortable: true,
+      width: 'min(150px, 18vw)',
+      render: (value) => (
+        <span className="font-mono text-xs sm:text-sm whitespace-nowrap">{String(value || '')}</span>
+      )
+    },
+    {
+      key: 'meaning',
+      label: 'Nghĩa',
+      sortable: true,
+      width: 'min(200px, 25vw)',
+      render: (value) => (
+        <span className="text-xs sm:text-sm leading-tight" title={String(value || '')}>
+          {String(value || '').length > 30 ? String(value || '').substring(0, 30) + '...' : String(value || '')}
+        </span>
+      )
+    },
+    {
+      key: 'adjType',
+      label: 'Loại',
+      sortable: true,
+      width: 'min(100px, 12vw)',
+      render: (value) => (
+        <div className="flex flex-col gap-1">
+          <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
+            value === 'na' ? 'bg-green-100 text-green-700' :
+            value === 'i' ? 'bg-purple-100 text-purple-700' :
+            'bg-gray-100 text-gray-700'
+          }`}>
+            {value === 'na' ? 'Na' : value === 'i' ? 'I' : 'Chưa'}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'example',
+      label: 'Ví dụ',
+      width: 'min(350px, 40vw)',
+      render: (value, row) => (
+        <ExpandableText 
+          text={String(value || '')} 
+          maxLength={50} 
+          itemId={`example-${row.kanji}-${row.reading}`} 
+        />
+      )
+    },
+    {
+      key: 'translation',
+      label: 'Dịch',
+      width: 'min(300px, 35vw)',
+      render: (value, row) => (
+        <ExpandableText 
+          text={String(row.translation || '')} 
+          maxLength={60} 
+          itemId={`translation-${row.kanji}-${row.reading}`} 
+        />
+      )
+    },
+    {
+      key: 'linkJP',
+      label: 'Link JP',
+      width: 'min(100px, 12vw)',
+      render: (value, row) => (
+        <span className="text-xs text-blue-600">
+          {row.linkJP ? (
+            <a href={String(row.linkJP || '')} target="_blank" rel="noopener noreferrer" className="hover:underline" title={String(row.linkJP || '')}>
+              JP
+            </a>
+          ) : '-'}
+        </span>
+      )
+    },
+    {
+      key: 'linkVN',
+      label: 'Link VN',
+      width: 'min(100px, 12vw)',
+      render: (value, row) => (
+        <span className="text-xs text-blue-600">
+          {row.linkVN ? (
+            <a href={String(row.linkVN || '')} target="_blank" rel="noopener noreferrer" className="hover:underline" title={String(row.linkVN || '')}>
+              VN
+            </a>
+          ) : '-'}
+        </span>
+      )
+    },
+    {
+      key: 'highlightTerm',
+      label: 'Từ nổi bật',
+      width: 'min(120px, 15vw)',
+      render: (value, row) => (
+        <span className="text-xs text-gray-600" title={String(row.highlightTerm || '')}>
+          {row.highlightTerm ? (String(row.highlightTerm).length > 15 ? String(row.highlightTerm).substring(0, 15) + '...' : String(row.highlightTerm)) : '-'}
+        </span>
+      )
+    }
+  ];
+
+  // Load stats
+  const loadStats = async () => {
     try {
-      const res = await fetch(`/api/admin/import`, { method: "POST" });
+      const res = await fetch('/api/admin/stats');
+      const json = await res.json();
+      if (res.ok) {
+        setStats(json);
+      }
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+    }
+  };
+
+  // Load entries
+  const loadEntries = async () => {
+    setLoading(true);
+    try {
+      let currentFilter = filter;
+      if (activeTab === 'na-table') currentFilter = 'na';
+      if (activeTab === 'i-table') currentFilter = 'i';
+      
+      const params = new URLSearchParams({
+        filter: currentFilter,
+        page: currentPage.toString(),
+        search: searchTerm,
+        sortBy,
+        sortOrder
+      });
+      
+      const res = await fetch(`/api/admin/entries?${params}`);
+      const json = await res.json();
+      
+      if (res.ok) {
+        setEntries(json.data);
+        setPagination(json.pagination);
+      } else {
+        setMsg(`Lỗi tải dữ liệu: ${json.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to load entries:', error);
+      setMsg('Lỗi tải dữ liệu');
+    }
+    setLoading(false);
+  };
+
+  // Handle CRUD operations
+  const handleEdit = (row: TableData) => {
+    setEditingEntry(row as Entry);
+    setShowAddForm(true);
+  };
+
+  const handleDelete = async (row: TableData) => {
+    if (!confirm('Bạn có chắc muốn xóa từ này?')) return;
+    
+    try {
+      const response = await fetch('/api/admin/entry', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kanji: row.kanji })
+      });
+      
+      const result = await response.json();
+      if (response.ok) {
+        setMsg('Đã xóa thành công');
+          loadEntries();
+        loadStats();
+      } else {
+        setMsg(`Lỗi: ${result.error}`);
+      }
+    } catch {
+      setMsg('Lỗi xóa dữ liệu');
+    }
+  };
+
+  const handleBulkDelete = async (rows: TableData[]) => {
+    if (!confirm(`Bạn có chắc muốn xóa ${rows.length} từ đã chọn?`)) return;
+    
+    try {
+      const response = await fetch('/api/admin/entry', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kanjis: rows.map(r => r.kanji) })
+      });
+      
+      const result = await response.json();
+      if (response.ok) {
+        setMsg(`Đã xóa ${result.deletedCount} từ thành công`);
+          loadEntries();
+        loadStats();
+      } else {
+        setMsg(`Lỗi: ${result.error}`);
+      }
+    } catch {
+      setMsg('Lỗi xóa dữ liệu');
+    }
+  };
+
+  const handleSaveEntry = async (entryData: Entry) => {
+    try {
+      const response = await fetch('/api/admin/entry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entryData)
+      });
+      
+      const result = await response.json();
+      if (response.ok) {
+        setMsg('Đã lưu thành công');
+        setEditingEntry(null);
+        setShowAddForm(false);
+        loadEntries();
+        loadStats();
+      } else {
+        setMsg(`Lỗi: ${result.error}`);
+      }
+    } catch {
+      setMsg('Lỗi lưu dữ liệu');
+    }
+  };
+
+  // Handle table events
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleSort = (column: string, direction: 'asc' | 'desc') => {
+    setSortBy(column);
+    setSortOrder(direction);
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  // Load data on mount and when dependencies change
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'entries' || activeTab === 'na-table' || activeTab === 'i-table') {
+      loadEntries();
+    } else if (activeTab === 'feedback') {
+      loadFeedback();
+    } else if (activeTab === 'logs') {
+      loadLogs();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, filter, currentPage, searchTerm, sortBy, sortOrder]);
+
+  // Load feedback
+  const loadFeedback = async () => {
+    setFeedbackLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '20'
+      });
+      
+      const res = await fetch(`/api/admin/feedback?${params}`);
+      const json = await res.json();
+      
+      if (res.ok) {
+        setFeedback(json.data);
+        setFeedbackPagination(json.pagination);
+      } else {
+        setMsg(`Lỗi tải feedback: ${json.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to load feedback:', error);
+      setMsg('Lỗi tải feedback');
+    }
+    setFeedbackLoading(false);
+  };
+
+  // Load admin logs
+  const loadLogs = async () => {
+    setLogsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '20'
+      });
+      
+      console.log('Loading logs with params:', params.toString());
+      const res = await fetch(`/api/admin/logs?${params}`);
+      const json = await res.json();
+      
+      console.log('Logs response:', json);
+      
+      if (res.ok) {
+        setLogs(json.data);
+        setLogsPagination(json.pagination);
+        console.log('Logs loaded successfully:', json.data.length, 'items');
+      } else {
+        setMsg(`Lỗi tải logs: ${json.error}`);
+        console.error('Failed to load logs:', json);
+      }
+    } catch (error) {
+      console.error('Failed to load logs:', error);
+      setMsg('Lỗi tải logs');
+    }
+    setLogsLoading(false);
+  };
+
+  // Handle import CSV
+  const handleImportCsv = async (file?: File, mode: 'append' | 'replace' = 'append', assignType?: 'na' | 'i') => {
+    setImporting(true);
+    setMsg("");
+    try {
+      const formData = new FormData();
+      if (file) {
+        formData.append('file', file);
+      }
+      
+      const params = new URLSearchParams();
+      if (assignType) {
+        params.append('assignType', assignType);
+      }
+      params.append('mode', mode);
+      
+      const url = `/api/admin/import?${params.toString()}`;
+      const res = await fetch(url, { 
+        method: "POST",
+        body: formData
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Import failed");
-      setMsg(`Đã nhập ${json.upserted}/${json.count}`);
+      setMsg(`Đã ${mode === 'append' ? 'thêm' : 'thay thế'} ${json.upserted}/${json.count} từ`);
+      loadStats();
+      if (activeTab === 'entries' || activeTab === 'na-table' || activeTab === 'i-table') {
+        loadEntries();
+      }
     } catch (e: unknown) {
       setMsg((e as Error).message || "Lỗi import");
     }
     setImporting(false);
   };
 
-  const exportCsv = async () => {
+  // Handle import modal
+  const handleImportModal = (mode: 'append' | 'replace') => {
+    setImportMode(mode);
+    setImportAdjType('auto');
+    setShowImportModal(true);
+  };
+
+  // Handle file selection for import
+  const handleFileSelect = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const adjType = importAdjType === 'auto' ? undefined : (importAdjType as 'na' | 'i');
+        handleImportCsv(file, importMode, adjType);
+        setShowImportModal(false);
+      }
+    };
+    input.click();
+  };
+
+  // Handle export CSV
+  const handleExportCsv = async () => {
     setMsg("");
-    const res = await fetch(`/api/admin/export`);
+    try {
+      const res = await fetch('/api/admin/export');
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'entries_export.csv'; a.click();
+      a.href = url;
+      a.download = 'entries_export.csv';
+      a.click();
     URL.revokeObjectURL(url);
+      setMsg('Đã xuất CSV thành công');
+    } catch {
+      setMsg('Lỗi xuất CSV');
+    }
+  };
+
+  // Handle template download
+  const handleDownloadTemplate = async () => {
+    try {
+      const res = await fetch('/api/admin/template');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sample.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setMsg('Lỗi tải template');
+    }
+  };
+
+  // Handle email reply
+  const handleSendReplyEmail = async (email: string, subject: string, message: string) => {
+    try {
+      const response = await fetch('/api/admin/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: email, subject, message })
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setMsg(`Đã gửi email đến ${email}`);
+      } else {
+        setMsg(`Lỗi gửi email: ${result.error}`);
+      }
+    } catch {
+      setMsg('Lỗi gửi email');
+    }
+  };
+
+  // Handle feedback row click for email reply
+  const handleFeedbackRowClick = (row: Record<string, unknown>) => {
+    if (row.email) {
+      setSelectedFeedback(row as {
+        _id: string;
+        type: string;
+        email?: string;
+        message: string;
+        createdAt: string;
+      });
+      setShowEmailDialog(true);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  // Handle create test logs
+  const handleCreateTestLogs = async () => {
+    try {
+      const response = await fetch('/api/admin/test-logs', { method: 'POST' });
+      const result = await response.json();
+      if (response.ok) {
+        setMsg('Đã tạo log test thành công');
+        if (activeTab === 'logs') {
+          loadLogs();
+        }
+      } else {
+        setMsg(`Lỗi tạo log test: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Failed to create test logs:', error);
+      setMsg('Lỗi tạo log test');
+    }
+  };
+
+  // Handle test database
+  const handleTestDB = async () => {
+    try {
+      const response = await fetch('/api/admin/test-db');
+      const result = await response.json();
+      if (response.ok) {
+        setMsg(`DB OK - Tổng logs: ${result.totalLogs}`);
+        console.log('DB test result:', result);
+        if (activeTab === 'logs') {
+          loadLogs();
+        }
+      } else {
+        setMsg(`Lỗi DB: ${result.error}`);
+        console.error('DB test failed:', result);
+      }
+    } catch (error) {
+      console.error('Failed to test DB:', error);
+      setMsg('Lỗi test DB');
+    }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <h1 className="text-2xl font-light mb-6 text-center">Admin Dashboard</h1>
-      {/* Basic Auth đã bảo vệ /admin và /api/admin, không cần ADMIN_TOKEN nữa */}
-      <div className="card p-4 mb-4">
-        <div className="flex items-center gap-2">
-          <button className="btn-secondary" onClick={exportCsv}>Xuất CSV</button>
-          {msg && <span className="text-sm text-muted-foreground">{msg}</span>}
-        </div>
-      </div>
-      <div className="card p-4 mb-4">
-        <div className="text-sm text-muted-foreground mb-2">Bộ lọc hiển thị</div>
-        <div className="flex gap-2">
-          <button className={`btn-secondary px-3 py-1 ${filter==='all'?'border border-primary':''}`} onClick={()=>setFilter('all')}>Tất cả</button>
-          <button className={`btn-secondary px-3 py-1 ${filter==='na'?'border border-primary':''}`} onClick={()=>setFilter('na')}>Na-adj (list1)</button>
-          <button className={`btn-secondary px-3 py-1 ${filter==='i'?'border border-primary':''}`} onClick={()=>setFilter('i')}>I-adj (list2)</button>
-        </div>
-      </div>
-      <div className="card p-4 mb-4">
-        <div className="text-sm text-muted-foreground mb-2">Sửa nhanh từ vựng</div>
-        <div className="flex gap-2 mb-3">
-          <input className="input" placeholder="Nhập kanji để tìm" value={editKanji} onChange={(e)=>setEditKanji(e.target.value)} />
-          <button className="btn-secondary" onClick={async()=>{
-            const res = await fetch(`/api/admin/entry?kanji=${encodeURIComponent(editKanji)}`);
-            const json = await res.json();
-            setEntry(json.data || null);
-          }}>Tìm</button>
-        </div>
-        {entry && (
-          <div className="space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <input className="input" value={entry.reading||''} onChange={(e)=>setEntry({...entry, reading:e.target.value})} placeholder="Cách đọc" />
-              <input className="input" value={entry.meaning||''} onChange={(e)=>setEntry({...entry, meaning:e.target.value})} placeholder="Nghĩa" />
-              <input className="input" value={entry.example||''} onChange={(e)=>setEntry({...entry, example:e.target.value})} placeholder="Ví dụ" />
-              <input className="input" value={entry.translation||''} onChange={(e)=>setEntry({...entry, translation:e.target.value})} placeholder="Dịch" />
-              <input className="input" value={(entry.antonyms||[]).join(', ')} onChange={(e)=>setEntry({...entry, antonyms:e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean)})} placeholder="Từ trái nghĩa (phân cách bằng ,)" />
-              <input className="input" value={(entry.synonyms||[]).join(', ')} onChange={(e)=>setEntry({...entry, synonyms:e.target.value.split(',').map((s:string)=>s.trim()).filter(Boolean)})} placeholder="Từ đồng nghĩa (phân cách bằng ,)" />
-            </div>
-            <div className="flex justify-end">
-              <button className="btn-primary" onClick={async()=>{
-                setMsg("");
-                const res = await fetch('/api/admin/entry', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ kanji: editKanji, ...entry }) });
-                const json = await res.json();
-                if(!res.ok) { setMsg(json.error||'Lỗi'); return; }
-                setMsg('Đã lưu');
-              }}>Lưu</button>
-            </div>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="flex gap-6">
+        {/* Left Sidebar */}
+        <aside className="w-56 flex-shrink-0">
+          <div className="card p-4 sticky top-6">
+            <div className="text-sm text-muted-foreground mb-3">Menu quản trị</div>
+            <nav className="space-y-2">
+              <button 
+                className={`w-full text-left px-3 py-2 rounded ${
+                  activeTab === 'stats' ? 'bg-primary text-white' : 'bg-gray-100'
+                }`} 
+                onClick={() => setActiveTab('stats')}
+              >
+                Tổng quan
+              </button>
+              <button 
+                className={`w-full text-left px-3 py-2 rounded ${
+                  activeTab === 'entries' ? 'bg-primary text-white' : 'bg-gray-100'
+                }`} 
+                onClick={() => setActiveTab('entries')}
+              >
+                Tất cả từ vựng
+              </button>
+              <button 
+                className={`w-full text-left px-3 py-2 rounded ${
+                  activeTab === 'na-table' ? 'bg-primary text-white' : 'bg-gray-100'
+                }`} 
+                onClick={() => setActiveTab('na-table')}
+              >
+                Tính từ Na
+              </button>
+              <button 
+                className={`w-full text-left px-3 py-2 rounded ${
+                  activeTab === 'i-table' ? 'bg-primary text-white' : 'bg-gray-100'
+                }`} 
+                onClick={() => setActiveTab('i-table')}
+              >
+                Tính từ I
+              </button>
+              <button 
+                className={`w-full text-left px-3 py-2 rounded ${
+                  activeTab === 'feedback' ? 'bg-primary text-white' : 'bg-gray-100'
+                }`} 
+                onClick={() => setActiveTab('feedback')}
+              >
+                Góp ý
+              </button>
+              <button 
+                className={`w-full text-left px-3 py-2 rounded ${
+                  activeTab === 'logs' ? 'bg-primary text-white' : 'bg-gray-100'
+                }`} 
+                onClick={() => setActiveTab('logs')}
+              >
+                Lịch sử hoạt động
+              </button>
+              <div className="pt-2 mt-2 border-t border-border">
+                <button 
+                  className="btn-secondary bg-red-600 hover:bg-red-700 text-white w-full" 
+                  onClick={handleLogout}
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            </nav>
           </div>
-        )}
-      </div>
-      <div className="card p-4 mb-4">
-        <div className="text-sm text-muted-foreground mb-2">Thao tác nhanh Replace</div>
-        <div className="flex flex-wrap gap-2">
-          <button className="btn-secondary" onClick={async()=>{
-            setMsg(""); setImporting(true);
-            try {
-              const res = await fetch('/api/admin/import?mode=replace&scope=na&deleteRatings=true', { method: 'POST' });
-              const json = await res.json();
-              if(!res.ok) throw new Error(json.error || 'failed');
-              setMsg(`Replace Na: del ${json.deletedEntries}/${json.deletedRatings} ratings, upserted ${json.upserted}`);
-            } catch(e: unknown){ setMsg((e as Error).message || 'Lỗi'); }
-            setImporting(false);
-          }}>Replace Na-adj (list1)</button>
-          <button className="btn-secondary" onClick={async()=>{
-            setMsg(""); setImporting(true);
-            try {
-              const res = await fetch('/api/admin/import?mode=replace&scope=i&deleteRatings=true', { method: 'POST' });
-              const json = await res.json();
-              if(!res.ok) throw new Error(json.error || 'failed');
-              setMsg(`Replace I: del ${json.deletedEntries}/${json.deletedRatings} ratings, upserted ${json.upserted}`);
-            } catch(e: unknown){ setMsg((e as Error).message || 'Lỗi'); }
-            setImporting(false);
-          }}>Replace I-adj (list2)</button>
+        </aside>
+
+        {/* Main content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-light">Bảng điều khiển quản trị</h1>
+            {activeTab === 'logs' && (
+              <div className="flex gap-2">
+                <button 
+                  className="btn-secondary bg-purple-600 hover:bg-purple-700 text-white"
+                  onClick={handleCreateTestLogs}
+                >
+                  Tạo log test
+                </button>
+                <button 
+                  className="btn-secondary bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={handleTestDB}
+                >
+                  Test DB
+                </button>
+              </div>
+            )}
+            {activeTab !== 'stats' && activeTab !== 'feedback' && activeTab !== 'logs' && (
+              <div className="flex gap-2">
+                <button 
+                  className="btn-secondary"
+                  onClick={handleExportCsv}
+                >
+                  Xuất CSV
+                </button>
+                <button 
+                  className="btn-secondary"
+                  onClick={handleDownloadTemplate}
+                >
+                  Tải mẫu CSV
+                </button>
+                <button 
+                  className="btn-secondary bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => handleImportModal('append')}
+                  disabled={importing}
+                >
+                  {importing ? "Đang nhập..." : "Nhập thêm CSV"}
+                </button>
+                <button 
+                  className="btn-secondary bg-orange-600 hover:bg-orange-700 text-white"
+                  onClick={() => handleImportModal('replace')}
+                  disabled={importing}
+                >
+                  {importing ? "Đang nhập..." : "Nhập thay thế CSV"}
+                </button>
+                <button 
+                  className="btn-primary"
+                  onClick={() => {
+                    setEditingEntry({
+                      kanji: '',
+                      reading: '',
+                      meaning: '',
+                      adjType: activeTab === 'na-table' ? 'na' : activeTab === 'i-table' ? 'i' : undefined
+                    });
+                    setShowAddForm(true);
+                  }}
+                >
+                  Thêm từ mới
+                </button>
+              </div>
+            )}
+          </div>
+
+          {msg && (
+            <div className="card p-4 mb-4 bg-blue-50 border-blue-200 text-blue-700">
+              {msg}
+            </div>
+          )}
+
+          {/* Stats Tab */}
+          {activeTab === 'stats' && stats && (
+            <div className="space-y-6">
+              {/* Key Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-blue-600 mb-1">Tổng từ vựng</h3>
+                      <p className="text-3xl font-bold text-blue-700">{stats.entries.total}</p>
+                    </div>
+
+                  </div>
+                </div>
+                
+                <div className="card p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-green-600 mb-1">Tính từ Na</h3>
+                      <p className="text-3xl font-bold text-green-700">{stats.entries.na}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
+                      <span className="text-2xl">な</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-purple-600 mb-1">Tính từ I</h3>
+                      <p className="text-3xl font-bold text-purple-700">{stats.entries.i}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
+                      <span className="text-2xl">い</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="card p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-orange-600 mb-1">Chưa phân loại</h3>
+                      <p className="text-3xl font-bold text-orange-700">{stats.entries.untyped}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-orange-200 rounded-lg flex items-center justify-center">
+                      <span className="text-2xl">❓</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Recent Entries */}
+                <div className="card p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Từ vựng gần đây</h3>
+                    <button 
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      onClick={() => setActiveTab('entries')}
+                    >
+                      Xem tất cả →
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {stats.recentEntries.map((item, idx) => (
+                      <div 
+                        key={idx} 
+                        className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+                        onClick={() => {
+                          setEditingEntry(item);
+                          setShowAddForm(true);
+                        }}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-gray-900">{item.kanji}</span>
+                            <span className="text-sm text-gray-500">({item.reading})</span>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              item.adjType === 'na' ? 'bg-green-100 text-green-700' :
+                              item.adjType === 'i' ? 'bg-purple-100 text-purple-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {item.adjType === 'na' ? 'Tính từ Na' : item.adjType === 'i' ? 'Tính từ I' : 'Chưa phân loại'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 truncate">{item.meaning}</p>
+                        </div>
+                        <div className="text-xs text-gray-400 ml-2">
+                          <span className="text-blue-600 hover:text-blue-800">Sửa</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recent Feedback */}
+                <div className="card p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Góp ý gần đây</h3>
+                    <span className="text-sm text-gray-500">{stats.feedback.total} góp ý</span>
+                  </div>
+                  <div className="space-y-3">
+                    {stats.recentFeedback.map((item, idx) => (
+                      <div key={idx} className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                        <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              item.type === 'bug' ? 'bg-red-100 text-red-700' :
+                              item.type === 'suggestion' ? 'bg-blue-100 text-blue-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {item.type}
+                            </span>
+                            {item.email && (
+                              <span className="text-xs text-gray-500">{item.email}</span>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-400">
+                            {new Date(item.createdAt).toLocaleDateString('vi-VN')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{item.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
         </div>
       </div>
-      {/* Placeholders for future stats */}
-      <div className="card p-4">
-        <div className="text-sm text-muted-foreground">Thống kê sẽ hiển thị ở đây (entries, ratings, feedback).</div>
+          )}
+
+          {/* Data Tables */}
+          {(activeTab === 'entries' || activeTab === 'na-table' || activeTab === 'i-table') && (
+            <>
+              {/* Filter Controls */}
+              <div className="card p-4 mb-4">
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bộ lọc
+                    </label>
+                    <select
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value as 'all' | 'na' | 'i' | 'missing-jp-link' | 'missing-vn-link' | 'missing-highlight' | 'missing-example' | 'missing-translation' | 'untyped' | 'complete')}
+                      className="input w-full sm:w-auto"
+                    >
+                      <option value="all">Tất cả</option>
+                      <option value="na">Tính từ Na</option>
+                      <option value="i">Tính từ I</option>
+                      <option value="missing-jp-link">Thiếu link JP</option>
+                      <option value="missing-vn-link">Thiếu link VN</option>
+                      <option value="missing-highlight">Thiếu từ nổi bật</option>
+                      <option value="missing-example">Thiếu ví dụ</option>
+                      <option value="missing-translation">Thiếu dịch</option>
+                      <option value="untyped">Chưa phân loại</option>
+                      <option value="complete">Có đầy đủ</option>
+                    </select>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {pagination && `Hiển thị ${((pagination.page - 1) * pagination.limit) + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} trong tổng số ${pagination.total} mục`}
+                  </div>
+                </div>
+              </div>
+
+              <DataTable
+                columns={columns}
+                data={entries}
+                pagination={pagination || undefined}
+                loading={loading}
+                onPageChange={handlePageChange}
+                onSort={handleSort}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onBulkDelete={handleBulkDelete}
+                searchable={true}
+                onSearch={handleSearch}
+                selectable={true}
+                actions={{ edit: true, delete: true }}
+              />
+            </>
+          )}
+
+          {/* Feedback Tab */}
+          {activeTab === 'feedback' && (
+            <DataTable
+              columns={[
+                {
+                  key: 'type',
+                  label: 'Loại',
+                  width: '100px',
+                  render: (value) => (
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      value === 'bug' ? 'bg-red-100 text-red-700' :
+                      value === 'suggestion' ? 'bg-blue-100 text-blue-700' :
+                      value === 'feature' ? 'bg-green-100 text-green-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                      {String(value || '')}
+                          </span>
+                  )
+                },
+                {
+                  key: 'email',
+                  label: 'Email',
+                  width: '200px',
+                  render: (value) => (
+                    <span className="text-sm">{String(value || '-')}</span>
+                  )
+                },
+                {
+                  key: 'message',
+                  label: 'Nội dung',
+                  render: (value) => (
+                    <span className="text-sm line-clamp-2">{String(value || '')}</span>
+                  )
+                },
+                {
+                  key: 'createdAt',
+                  label: 'Ngày',
+                  width: '120px',
+                  render: (value) => (
+                    <span className="text-xs text-gray-500">
+                      {new Date(String(value || '')).toLocaleDateString('vi-VN')}
+                    </span>
+                  )
+                }
+              ]}
+              data={feedback}
+              pagination={feedbackPagination || undefined}
+              loading={feedbackLoading}
+              onPageChange={handlePageChange}
+              searchable={false}
+              selectable={false}
+              actions={{ 
+                edit: false, 
+                delete: false, 
+                view: true 
+              }}
+              onRowClick={handleFeedbackRowClick}
+            />
+          )}
+
+          {/* Admin Logs Tab */}
+          {activeTab === 'logs' && (
+            <DataTable
+              columns={[
+                {
+                  key: 'action',
+                  label: 'Hành động',
+                  width: '120px',
+                  render: (value) => {
+                    const actionLabels = {
+                      'import': 'Nhập CSV',
+                      'export': 'Xuất CSV',
+                      'create': 'Tạo mới',
+                      'update': 'Cập nhật',
+                      'delete': 'Xóa',
+                      'login': 'Đăng nhập',
+                      'logout': 'Đăng xuất',
+                      'email_reply': 'Trả lời email'
+                    };
+                    const colors = {
+                      'import': 'bg-green-100 text-green-700',
+                      'export': 'bg-blue-100 text-blue-700',
+                      'create': 'bg-purple-100 text-purple-700',
+                      'update': 'bg-yellow-100 text-yellow-700',
+                      'delete': 'bg-red-100 text-red-700',
+                      'login': 'bg-indigo-100 text-indigo-700',
+                      'logout': 'bg-gray-100 text-gray-700',
+                      'email_reply': 'bg-pink-100 text-pink-700'
+                    };
+                    return (
+                      <span className={`px-2 py-1 text-xs rounded-full ${colors[value as keyof typeof colors] || 'bg-gray-100 text-gray-700'}`}>
+                        {actionLabels[String(value || '') as keyof typeof actionLabels] || String(value || '')}
+                      </span>
+                    );
+                  }
+                },
+                {
+                  key: 'user',
+                  label: 'Người thực hiện',
+                  width: '120px',
+                  render: (value) => (
+                    <span className="text-sm font-medium">{String(value || '')}</span>
+                  )
+                },
+                {
+                  key: 'details',
+                  label: 'Chi tiết',
+                  render: (value) => {
+                    const details: string[] = [];
+                    const val = value as Record<string, unknown>;
+                    if (val.mode) details.push(`Chế độ: ${val.mode}`);
+                    if (val.adjType) details.push(`Loại: ${val.adjType}`);
+                    if (val.count) details.push(`Số lượng: ${val.count}`);
+                    if (val.fileName) details.push(`File: ${val.fileName}`);
+                    if (val.kanji) details.push(`Từ: ${val.kanji}`);
+                    if (val.email) details.push(`Email: ${val.email}`);
+                    return (
+                      <span className="text-sm text-gray-600">
+                        {details.length > 0 ? details.join(', ') : '-'}
+                      </span>
+                    );
+                  }
+                },
+                {
+                  key: 'ip',
+                  label: 'IP',
+                  width: '120px',
+                  render: (value) => (
+                    <span className="text-xs text-gray-500 font-mono">{String(value || '-')}</span>
+                  )
+                },
+                {
+                  key: 'timestamp',
+                  label: 'Thời gian',
+                  width: '150px',
+                  render: (value) => (
+                    <span className="text-xs text-gray-500">
+                      {new Date(String(value || '')).toLocaleString('vi-VN')}
+                    </span>
+                  )
+                }
+              ]}
+              data={logs}
+              pagination={logsPagination || undefined}
+              loading={logsLoading}
+              onPageChange={handlePageChange}
+              searchable={false}
+              selectable={false}
+              actions={{ 
+                edit: false, 
+                delete: false, 
+                view: false 
+              }}
+            />
+          )}
+
+          {/* Add/Edit Form Modal */}
+          {showAddForm && editingEntry && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-medium">
+                    {editingEntry.kanji ? 'Sửa từ vựng' : 'Thêm từ vựng mới'}
+                  </h3>
+                  <button 
+                    className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                    onClick={() => {
+                      setShowAddForm(false);
+                      setEditingEntry(null);
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input 
+                      className="input" 
+                      value={editingEntry.kanji || ''} 
+                      onChange={(e) => setEditingEntry({...editingEntry, kanji: e.target.value})} 
+                      placeholder="Kanji" 
+                      required
+                    />
+                    <input 
+                      className="input" 
+                      value={editingEntry.reading || ''} 
+                      onChange={(e) => setEditingEntry({...editingEntry, reading: e.target.value})} 
+                      placeholder="Cách đọc" 
+                      required
+                    />
+                    <input 
+                      className="input" 
+                      value={editingEntry.meaning || ''} 
+                      onChange={(e) => setEditingEntry({...editingEntry, meaning: e.target.value})} 
+                      placeholder="Nghĩa" 
+                      required
+                    />
+                    <input 
+                      className="input" 
+                      value={editingEntry.example || ''} 
+                      onChange={(e) => setEditingEntry({...editingEntry, example: e.target.value})} 
+                      placeholder="Ví dụ" 
+                    />
+                    <input 
+                      className="input" 
+                      value={editingEntry.translation || ''} 
+                      onChange={(e) => setEditingEntry({...editingEntry, translation: e.target.value})} 
+                      placeholder="Dịch" 
+                    />
+                    <input 
+                      className="input" 
+                      value={editingEntry.linkJP || ''} 
+                      onChange={(e) => setEditingEntry({...editingEntry, linkJP: e.target.value})} 
+                      placeholder="Link JP" 
+                    />
+                    <input 
+                      className="input" 
+                      value={editingEntry.linkVN || ''} 
+                      onChange={(e) => setEditingEntry({...editingEntry, linkVN: e.target.value})} 
+                      placeholder="Link VN" 
+                    />
+                    <input 
+                      className="input" 
+                      value={editingEntry.highlightTerm || ''} 
+                      onChange={(e) => setEditingEntry({...editingEntry, highlightTerm: e.target.value})} 
+                      placeholder="Từ nổi bật" 
+                    />
+                    <select 
+                      className="input" 
+                      value={editingEntry.adjType || ''} 
+                      onChange={(e) => setEditingEntry({...editingEntry, adjType: e.target.value as 'na'|'i'})}
+                    >
+                      <option value="">Chọn loại tính từ</option>
+                      <option value="na">Tính từ Na</option>
+                      <option value="i">Tính từ I</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button 
+                      className="btn-secondary" 
+                      onClick={() => {
+                        setShowAddForm(false);
+                        setEditingEntry(null);
+                      }}
+                    >
+                      Hủy
+                    </button>
+                    <button 
+                      className="btn-primary" 
+                      onClick={() => handleSaveEntry(editingEntry)}
+                    >
+                      Lưu
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Import CSV Modal */}
+          {showImportModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className="card max-w-md w-full p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-medium">
+                    {importMode === 'append' ? 'Nhập thêm CSV' : 'Nhập thay thế CSV'}
+                  </h3>
+                  <button 
+                    className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                    onClick={() => setShowImportModal(false)}
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Chế độ {importMode === 'append' ? 'thêm' : 'thay thế'}:</strong>
+                      {importMode === 'append' 
+                        ? ' Dữ liệu mới sẽ được thêm vào cơ sở dữ liệu hiện có'
+                        : ' Tất cả dữ liệu cũ sẽ bị xóa và thay thế bằng dữ liệu mới'
+                      }
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Chọn loại tính từ:
+                    </label>
+                    <select 
+                      className="input w-full" 
+                      value={importAdjType} 
+                      onChange={(e) => setImportAdjType(e.target.value as 'na' | 'i' | 'auto')}
+                    >
+                      <option value="auto">Tự động phát hiện (dựa trên cách đọc)</option>
+                      <option value="na">Tính từ Na (な)</option>
+                      <option value="i">Tính từ I (い)</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Tự động phát hiện: kết thúc bằng い → I, kết thúc bằng な hoặc 的 → Na
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2">
+                    <button 
+                      className="btn-secondary" 
+                      onClick={() => setShowImportModal(false)}
+                    >
+                      Hủy
+                    </button>
+                    <button 
+                      className="btn-primary" 
+                      onClick={handleFileSelect}
+                    >
+                      Chọn file CSV
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Email Reply Dialog */}
+          <EmailReplyDialog
+            open={showEmailDialog}
+            onClose={() => {
+              setShowEmailDialog(false);
+              setSelectedFeedback(null);
+            }}
+            feedbackData={selectedFeedback}
+            onSendEmail={handleSendReplyEmail}
+          />
+        </div>
       </div>
     </div>
   );
 }
-
-

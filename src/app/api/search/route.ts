@@ -152,11 +152,9 @@ let LOCAL_DATA: LocalEntry[] | null = null;
 function ensureLocalDataLoaded() {
   if (LOCAL_DATA) return;
   const root = path.resolve(process.cwd());
-  const f1 = path.join(root, "data", "list1.csv");
-  const f2 = path.join(root, "data", "list2.csv");
-  const raw1 = safeReadFile(f1);
-  const raw2 = safeReadFile(f2);
-  LOCAL_DATA = [...parseCsv(raw1), ...parseCsv(raw2)];
+  const sampleFile = path.join(root, "data", "sample.csv");
+  const raw = safeReadFile(sampleFile);
+  LOCAL_DATA = parseCsv(raw);
 }
 
 function safeReadFile(filePath: string): string {
@@ -175,6 +173,7 @@ function parseCsv(text: string): LocalEntry[] {
   for (let i = 1; i < lines.length; i += 1) {
     const cols = splitCsvLine(lines[i]);
     if (cols.length < 4) continue;
+    // New sample.csv format: STT,Ngữ liệu,Cách đọc,Nghĩa,Câu ví dụ,Dịch (việt),Link (JP),Link (VN),Nổi bật từ vựng ví dụ
     const kanji = (cols[1] || "").trim();
     const reading = (cols[2] || "").trim();
     const meaning = (cols[3] || "").trim();
@@ -289,9 +288,7 @@ function normalizeDocToResult(e: EntryDoc) {
     translation: e.translation,
     linkJP: e.linkJP,
     linkVN: e.linkVN,
-    antonyms: e.antonyms,
-    synonyms: (e as unknown as { synonyms?: string[] }).synonyms,
-    highlightTerm: (e as unknown as { highlightTerm?: string }).highlightTerm,
+    highlightTerm: e.highlightTerm,
   };
 }
 

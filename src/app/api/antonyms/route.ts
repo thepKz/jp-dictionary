@@ -8,8 +8,8 @@ export async function GET(req: NextRequest) {
   try {
     const db = await getDb();
     const col = db.collection<EntryDoc>("entries");
-    const doc = await col.findOne({ kanji }, { projection: { antonyms: 1, _id: 0 } });
-    return NextResponse.json({ kanji, antonyms: doc?.antonyms || [] });
+    await col.findOne({ kanji }, { projection: { _id: 0 } });
+    return NextResponse.json({ kanji, antonyms: [] }); // antonyms removed
   } catch {
     return NextResponse.json({ error: "failed" }, { status: 500 });
   }

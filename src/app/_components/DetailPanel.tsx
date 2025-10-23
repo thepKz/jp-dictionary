@@ -154,12 +154,12 @@ export default function DetailPanel({ entry, examples, onClose }: DetailPanelPro
                   {examples.map((ex) => (
                     <div key={ex.id} className="space-y-3">
                       <div className="example-text">
-                        <div className="text-sm font-medium mb-2 text-amber-700 dark:text-amber-300">Ví dụ</div>
+                        <div className="text-sm font-medium mb-2 text-foreground">Ví dụ</div>
                         <div className="text-base leading-relaxed">{ex.jp.text}</div>
                       </div>
                       {ex.translations[0] && (
                         <div className="translation-text">
-                          <div className="text-sm font-medium mb-2 text-blue-700 dark:text-blue-300">Dịch</div>
+                          <div className="text-sm font-medium mb-2 text-foreground">Dịch</div>
                           <div className="text-base leading-relaxed capitalize">
                             {ex.translations[0].text}
                           </div>

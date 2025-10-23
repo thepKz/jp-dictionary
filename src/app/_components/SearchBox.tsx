@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toRomaji } from "wanakana";
 import Fuse from "fuse.js";
 import { toKana } from "wanakana";
-import RatingStars from "./RatingStars";
 
 let isSpeaking = false;
 const waitForVoices = (timeoutMs = 1200) => new Promise<void>((resolve) => {
@@ -216,7 +215,6 @@ type SearchResult = {
   linkJP?: string;
   linkVN?: string;
   highlightTerm?: string;
-  synonyms?: string[];
 };
 const capitalizeFirst = (s?: string) => {
   if (!s) return s || "";
@@ -382,18 +380,18 @@ export default function SearchBox() {
   };
 
   return (
-    <div className="card p-8 animate-fadeIn">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-light mb-2">Tìm kiếm từ vựng</h2>
-        <p className="text-muted-foreground">Nhập kanji, kana, romaji hoặc nghĩa tiếng Việt</p>
+    <div className="card p-4 sm:p-8 animate-fadeIn">
+      <div className="text-center mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-light mb-2">Tìm kiếm từ vựng</h2>
+        <p className="text-sm sm:text-base text-muted-foreground">Nhập kanji, kana, romaji hoặc nghĩa tiếng Việt</p>
       </div>
 
       {/* Search Input with Dropdown */}
       <div className="relative mb-6">
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
           <div className="relative flex-1">
             <input
-              className="input pl-4 pr-4 py-3 sm:py-4 text-base sm:text-lg w-full"
+              className="input pl-4 pr-4 py-4 sm:py-4 text-base sm:text-lg w-full"
               placeholder="Ví dụ: 経済的, keizaiteki, economic..."
               value={query}
               onChange={(e) => {
@@ -444,7 +442,7 @@ export default function SearchBox() {
           {/* Search Button */}
           <button
             type="button"
-            className="btn-primary hover-lift px-4 sm:px-6 py-3 sm:py-4 text-base sm:text-lg font-light flex items-center justify-center gap-2 w-full sm:w-auto"
+            className="btn-primary hover-lift px-6 sm:px-6 py-4 sm:py-4 text-base sm:text-lg font-light flex items-center justify-center gap-2 w-full sm:w-auto min-h-[48px] sm:min-h-[44px]"
             onClick={()=>handleSearch()}
             disabled={loading}
           >
@@ -530,7 +528,6 @@ export default function SearchBox() {
                       </svg>
                     </button>
                   )}
-                  <RatingStars kanji={r.kanji} />
                 </div>
                 {r.reading && (
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -618,7 +615,6 @@ export default function SearchBox() {
                     <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
                   </svg>
                 </button>
-                <span className="ml-2"><RatingStars kanji={autoDetail.kanji} /></span>
               </div>
             )}
             {autoDetail.senses?.[0]?.defs?.length && (
@@ -647,12 +643,6 @@ export default function SearchBox() {
                   </div>
                 )}
               </div>
-            )}
-            {(autoDetail as unknown as { antonyms?: string[] }).antonyms && (autoDetail as unknown as { antonyms?: string[] }).antonyms!.length > 0 && (
-              <div className="mb-2 text-sm"><span className="font-medium">Từ trái nghĩa:</span> {(autoDetail as unknown as { antonyms: string[] }).antonyms.join(', ')}</div>
-            )}
-            {(autoDetail as unknown as { synonyms?: string[] }).synonyms && (autoDetail as unknown as { synonyms?: string[] }).synonyms!.length > 0 && (
-              <div className="mb-2 text-sm"><span className="font-medium">Từ đồng nghĩa:</span> {(autoDetail as unknown as { synonyms: string[] }).synonyms.join(', ')}</div>
             )}
             <div className="text-xs text-muted-foreground mt-4 pt-2 border-t border-border">
               <div className="font-medium mb-1">Nguồn</div>
