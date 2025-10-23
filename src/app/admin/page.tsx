@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import DataTable, { TableColumn, TableData, PaginationInfo } from "../_components/DataTable";
 import EmailReplyDialog from "../_components/EmailReplyDialog";
+import ThemeToggle from "../_components/ThemeToggle";
 
 type Entry = {
   kanji: string;
@@ -614,62 +615,74 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl bg-white dark:bg-gray-900 min-h-screen">
       <div className="flex gap-6">
         {/* Left Sidebar */}
         <aside className="w-56 flex-shrink-0">
-          <div className="card p-4 sticky top-6">
-            <div className="text-sm text-muted-foreground mb-3">Menu quản trị</div>
+          <div className="card p-4 sticky top-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <div className="text-sm text-muted-foreground mb-3 dark:text-gray-400">Menu quản trị</div>
             <nav className="space-y-2">
               <button 
-                className={`w-full text-left px-3 py-2 rounded ${
-                  activeTab === 'stats' ? 'bg-primary text-white' : 'bg-gray-100'
+                className={`w-full text-left px-3 py-2 rounded transition-colors ${
+                  activeTab === 'stats' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                 }`} 
                 onClick={() => setActiveTab('stats')}
               >
                 Tổng quan
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded ${
-                  activeTab === 'entries' ? 'bg-primary text-white' : 'bg-gray-100'
+                className={`w-full text-left px-3 py-2 rounded transition-colors ${
+                  activeTab === 'entries' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                 }`} 
                 onClick={() => setActiveTab('entries')}
               >
                 Tất cả từ vựng
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded ${
-                  activeTab === 'na-table' ? 'bg-primary text-white' : 'bg-gray-100'
+                className={`w-full text-left px-3 py-2 rounded transition-colors ${
+                  activeTab === 'na-table' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                 }`} 
                 onClick={() => setActiveTab('na-table')}
               >
                 Tính từ Na
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded ${
-                  activeTab === 'i-table' ? 'bg-primary text-white' : 'bg-gray-100'
+                className={`w-full text-left px-3 py-2 rounded transition-colors ${
+                  activeTab === 'i-table' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                 }`} 
                 onClick={() => setActiveTab('i-table')}
               >
                 Tính từ I
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded ${
-                  activeTab === 'feedback' ? 'bg-primary text-white' : 'bg-gray-100'
+                className={`w-full text-left px-3 py-2 rounded transition-colors ${
+                  activeTab === 'feedback' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                 }`} 
                 onClick={() => setActiveTab('feedback')}
               >
                 Góp ý
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded ${
-                  activeTab === 'logs' ? 'bg-primary text-white' : 'bg-gray-100'
+                className={`w-full text-left px-3 py-2 rounded transition-colors ${
+                  activeTab === 'logs' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                 }`} 
                 onClick={() => setActiveTab('logs')}
               >
                 Lịch sử hoạt động
               </button>
-              <div className="pt-2 mt-2 border-t border-border">
+              <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700">
                 <button 
                   className="btn-secondary bg-red-600 hover:bg-red-700 text-white w-full" 
                   onClick={handleLogout}
@@ -684,7 +697,8 @@ export default function AdminPage() {
         {/* Main content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-light">Bảng điều khiển quản trị</h1>
+            <h1 className="text-2xl font-light text-gray-900 dark:text-white">Bảng điều khiển quản trị</h1>
+            <ThemeToggle />
             {activeTab === 'logs' && (
               <div className="flex gap-2">
                 <button 
@@ -758,47 +772,47 @@ export default function AdminPage() {
             <div className="space-y-6">
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 dark:from-blue-900/20 dark:to-blue-800/20 dark:border-blue-700">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-blue-600 mb-1">Tổng từ vựng</h3>
-                      <p className="text-3xl font-bold text-blue-700">{stats.entries.total}</p>
+                      <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Tổng từ vựng</h3>
+                      <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">{stats.entries.total}</p>
                     </div>
 
                   </div>
                 </div>
                 
-                <div className="card p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <div className="card p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200 dark:from-green-900/20 dark:to-green-800/20 dark:border-green-700">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-green-600 mb-1">Tính từ Na</h3>
-                      <p className="text-3xl font-bold text-green-700">{stats.entries.na}</p>
+                      <h3 className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Tính từ Na</h3>
+                      <p className="text-3xl font-bold text-green-700 dark:text-green-300">{stats.entries.na}</p>
                     </div>
-                    <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-green-200 dark:bg-green-800 rounded-lg flex items-center justify-center">
                       <span className="text-2xl">な</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                <div className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 dark:from-purple-900/20 dark:to-purple-800/20 dark:border-purple-700">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-purple-600 mb-1">Tính từ I</h3>
-                      <p className="text-3xl font-bold text-purple-700">{stats.entries.i}</p>
+                      <h3 className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Tính từ I</h3>
+                      <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{stats.entries.i}</p>
                     </div>
-                    <div className="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-purple-200 dark:bg-purple-800 rounded-lg flex items-center justify-center">
                       <span className="text-2xl">い</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="card p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                <div className="card p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 dark:from-orange-900/20 dark:to-orange-800/20 dark:border-orange-700">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-orange-600 mb-1">Chưa phân loại</h3>
-                      <p className="text-3xl font-bold text-orange-700">{stats.entries.untyped}</p>
+                      <h3 className="text-sm font-medium text-orange-600 dark:text-orange-400 mb-1">Chưa phân loại</h3>
+                      <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">{stats.entries.untyped}</p>
                     </div>
-                    <div className="w-12 h-12 bg-orange-200 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-orange-200 dark:bg-orange-800 rounded-lg flex items-center justify-center">
                       <span className="text-2xl">❓</span>
                     </div>
                   </div>
@@ -808,11 +822,11 @@ export default function AdminPage() {
               {/* Recent Activity */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent Entries */}
-                <div className="card p-6">
+                <div className="card p-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Từ vựng gần đây</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Từ vựng gần đây</h3>
                     <button 
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                       onClick={() => setActiveTab('entries')}
                     >
                       Xem tất cả →
@@ -822,7 +836,7 @@ export default function AdminPage() {
                     {stats.recentEntries.map((item, idx) => (
                       <div 
                         key={idx} 
-                        className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+                        className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg cursor-pointer transition-colors"
                         onClick={() => {
                           setEditingEntry(item);
                           setShowAddForm(true);
@@ -830,20 +844,20 @@ export default function AdminPage() {
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-semibold text-gray-900">{item.kanji}</span>
-                            <span className="text-sm text-gray-500">({item.reading})</span>
+                            <span className="font-semibold text-gray-900 dark:text-white">{item.kanji}</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">({item.reading})</span>
                             <span className={`px-2 py-1 text-xs rounded-full ${
-                              item.adjType === 'na' ? 'bg-green-100 text-green-700' :
-                              item.adjType === 'i' ? 'bg-purple-100 text-purple-700' :
-                              'bg-gray-100 text-gray-700'
+                              item.adjType === 'na' ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
+                              item.adjType === 'i' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400' :
+                              'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
                             }`}>
                               {item.adjType === 'na' ? 'Tính từ Na' : item.adjType === 'i' ? 'Tính từ I' : 'Chưa phân loại'}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 truncate">{item.meaning}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{item.meaning}</p>
                         </div>
-                        <div className="text-xs text-gray-400 ml-2">
-                          <span className="text-blue-600 hover:text-blue-800">Sửa</span>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 ml-2">
+                          <span className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">Sửa</span>
                         </div>
                       </div>
                     ))}
@@ -851,32 +865,32 @@ export default function AdminPage() {
                 </div>
 
                 {/* Recent Feedback */}
-                <div className="card p-6">
+                <div className="card p-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Góp ý gần đây</h3>
-                    <span className="text-sm text-gray-500">{stats.feedback.total} góp ý</span>
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Góp ý gần đây</h3>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{stats.feedback.total} góp ý</span>
                   </div>
                   <div className="space-y-3">
                     {stats.recentFeedback.map((item, idx) => (
-                      <div key={idx} className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                      <div key={idx} className="p-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors">
                         <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
                             <span className={`px-2 py-1 text-xs rounded-full ${
-                              item.type === 'bug' ? 'bg-red-100 text-red-700' :
-                              item.type === 'suggestion' ? 'bg-blue-100 text-blue-700' :
-                              'bg-gray-100 text-gray-700'
+                              item.type === 'bug' ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' :
+                              item.type === 'suggestion' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' :
+                              'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
                             }`}>
                               {item.type}
                             </span>
                             {item.email && (
-                              <span className="text-xs text-gray-500">{item.email}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">{item.email}</span>
                             )}
                           </div>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
                             {new Date(item.createdAt).toLocaleDateString('vi-VN')}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{item.message}</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">{item.message}</p>
                       </div>
                     ))}
                   </div>
