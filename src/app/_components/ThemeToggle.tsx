@@ -18,10 +18,15 @@ export default function ThemeToggle() {
   const applyTheme = (newTheme: 'light' | 'dark') => {
     const root = document.documentElement;
     
+    // Remove existing theme classes and data attributes
+    root.classList.remove('dark');
+    root.removeAttribute('data-theme');
+    
     if (newTheme === 'dark') {
       root.classList.add('dark');
+      root.setAttribute('data-theme', 'dark');
     } else {
-      root.classList.remove('dark');
+      root.setAttribute('data-theme', 'light');
     }
     
     localStorage.setItem('admin-theme', newTheme);
@@ -36,7 +41,17 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+      style={{
+        backgroundColor: theme === 'dark' ? '#1f2937' : '#f3f4f6',
+        color: theme === 'dark' ? '#ffffff' : '#000000'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = theme === 'dark' ? '#374151' : '#e5e7eb';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = theme === 'dark' ? '#1f2937' : '#f3f4f6';
+      }}
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       {theme === 'light' ? (

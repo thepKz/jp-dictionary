@@ -615,68 +615,56 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl bg-white dark:bg-gray-900 min-h-screen">
+    <div className="container mx-auto px-4 py-8 max-w-7xl bg-white admin-container min-h-screen">
       <div className="flex gap-6">
         {/* Left Sidebar */}
         <aside className="w-56 flex-shrink-0">
-          <div className="card p-4 sticky top-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-            <div className="text-sm text-muted-foreground mb-3 dark:text-gray-400">Menu quản trị</div>
+          <div className="card p-4 sticky top-6 bg-white admin-sidebar">
+            <div className="text-sm text-muted-foreground mb-3">Menu quản trị</div>
             <nav className="space-y-2">
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                  activeTab === 'stats' 
-                    ? 'bg-primary text-white' 
-                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
+                  activeTab === 'stats' ? 'active' : ''
                 }`} 
                 onClick={() => setActiveTab('stats')}
               >
                 Tổng quan
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                  activeTab === 'entries' 
-                    ? 'bg-primary text-white' 
-                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
+                  activeTab === 'entries' ? 'active' : ''
                 }`} 
                 onClick={() => setActiveTab('entries')}
               >
                 Tất cả từ vựng
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                  activeTab === 'na-table' 
-                    ? 'bg-primary text-white' 
-                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
+                  activeTab === 'na-table' ? 'active' : ''
                 }`} 
                 onClick={() => setActiveTab('na-table')}
               >
                 Tính từ Na
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                  activeTab === 'i-table' 
-                    ? 'bg-primary text-white' 
-                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
+                  activeTab === 'i-table' ? 'active' : ''
                 }`} 
                 onClick={() => setActiveTab('i-table')}
               >
                 Tính từ I
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                  activeTab === 'feedback' 
-                    ? 'bg-primary text-white' 
-                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
+                  activeTab === 'feedback' ? 'active' : ''
                 }`} 
                 onClick={() => setActiveTab('feedback')}
               >
                 Góp ý
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors ${
-                  activeTab === 'logs' 
-                    ? 'bg-primary text-white' 
-                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
+                  activeTab === 'logs' ? 'active' : ''
                 }`} 
                 onClick={() => setActiveTab('logs')}
               >
@@ -772,47 +760,47 @@ export default function AdminPage() {
             <div className="space-y-6">
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 dark:from-blue-900/20 dark:to-blue-800/20 dark:border-blue-700">
+                <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 admin-stats-card">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Tổng từ vựng</h3>
-                      <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">{stats.entries.total}</p>
+                      <h3 className="text-sm font-medium text-blue-600 mb-1 card-title">Tổng từ vựng</h3>
+                      <p className="text-3xl font-bold text-blue-700 card-text">{stats.entries.total}</p>
                     </div>
 
                   </div>
                 </div>
                 
-                <div className="card p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200 dark:from-green-900/20 dark:to-green-800/20 dark:border-green-700">
+                <div className="card p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200 admin-stats-card green">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Tính từ Na</h3>
-                      <p className="text-3xl font-bold text-green-700 dark:text-green-300">{stats.entries.na}</p>
+                      <h3 className="text-sm font-medium text-green-600 mb-1 card-title">Tính từ Na</h3>
+                      <p className="text-3xl font-bold text-green-700 card-text">{stats.entries.na}</p>
                     </div>
-                    <div className="w-12 h-12 bg-green-200 dark:bg-green-800 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
                       <span className="text-2xl">な</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 dark:from-purple-900/20 dark:to-purple-800/20 dark:border-purple-700">
+                <div className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 admin-stats-card purple">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Tính từ I</h3>
-                      <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{stats.entries.i}</p>
+                      <h3 className="text-sm font-medium text-purple-600 mb-1 card-title">Tính từ I</h3>
+                      <p className="text-3xl font-bold text-purple-700 card-text">{stats.entries.i}</p>
                     </div>
-                    <div className="w-12 h-12 bg-purple-200 dark:bg-purple-800 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
                       <span className="text-2xl">い</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="card p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 dark:from-orange-900/20 dark:to-orange-800/20 dark:border-orange-700">
+                <div className="card p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 admin-stats-card orange">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-orange-600 dark:text-orange-400 mb-1">Chưa phân loại</h3>
-                      <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">{stats.entries.untyped}</p>
+                      <h3 className="text-sm font-medium text-orange-600 mb-1 card-title">Chưa phân loại</h3>
+                      <p className="text-3xl font-bold text-orange-700 card-text">{stats.entries.untyped}</p>
                     </div>
-                    <div className="w-12 h-12 bg-orange-200 dark:bg-orange-800 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-orange-200 rounded-lg flex items-center justify-center">
                       <span className="text-2xl">❓</span>
                     </div>
                   </div>
