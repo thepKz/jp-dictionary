@@ -159,8 +159,8 @@ export default function DataTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-[800px]">
+      <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+        <table className="w-full border-collapse min-w-[1200px]">
           <thead>
             <tr className="border-b border-border">
               {selectable && (

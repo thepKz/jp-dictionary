@@ -88,30 +88,36 @@ export async function POST(req: NextRequest) {
 function parseCsv(text: string): EntryDoc[] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length === 0) return [];
-  // Strict Vietnamese header
+  // Flexible Vietnamese header matching
   const header = lines[0].trim();
-  const expected = "STT,Ngữ liệu,Cách đọc,Nghĩa,Câu ví dụ,Dịch (việt),Link (JP),Link (VN),Nổi bật từ vựng ví dụ";
+  const expectedHeaders = [
+    "STT,Ngữ liệu,Cách đọc,Nghĩa,Câu ví dụ,Dịch,Link (JP),Link (VN),Ghi chú",
+    "STT,Ngữ liệu,Cách đọc,Nghĩa,Câu ví dụ,Dịch (việt),Link (JP),Link (VN),Nổi bật từ vựng ví dụ",
+    "STT,Ngữ liệu,Cách đọc,Nghĩa,Câu ví dụ,Dịch,Link (JP),Link (VN),ô đỏ,: bổ sung thông tin"
+  ];
+  
   if (!header.startsWith("STT")) {
     // tolerate BOM
     const hdr = header.replace(/^\uFEFF/, "");
-    if (hdr !== expected) {
-      // try relaxed compare by removing spaces diff
-      const norm = (s: string) => s.replace(/\s+/g, " ").trim();
-      if (norm(hdr) !== norm(expected)) {
-        throw new Error("CSV header không đúng định dạng yêu cầu");
-      }
-    }
-  } else if (header !== expected) {
     const norm = (s: string) => s.replace(/\s+/g, " ").trim();
-    if (norm(header) !== norm(expected)) {
-      throw new Error("CSV header không đúng định dạng yêu cầu");
+    const normalizedHeader = norm(hdr);
+    const isMatch = expectedHeaders.some(expected => norm(expected) === normalizedHeader);
+    if (!isMatch) {
+      throw new Error(`CSV header không đúng định dạng yêu cầu. Header hiện tại: "${hdr}"`);
+    }
+  } else {
+    const norm = (s: string) => s.replace(/\s+/g, " ").trim();
+    const normalizedHeader = norm(header);
+    const isMatch = expectedHeaders.some(expected => norm(expected) === normalizedHeader);
+    if (!isMatch) {
+      throw new Error(`CSV header không đúng định dạng yêu cầu. Header hiện tại: "${header}"`);
     }
   }
   const out: EntryDoc[] = [];
   for (let i = 1; i < lines.length; i += 1) {
     const cols = splitCsvLine(lines[i]);
     if (cols.length < 4) continue;
-    // New sample.csv format: STT,Ngữ liệu,Cách đọc,Nghĩa,Câu ví dụ,Dịch (việt),Link (JP),Link (VN),Nổi bật từ vựng ví dụ
+    // Flexible CSV format handling
     const kanji = (cols[1] || "").trim();
     const reading = (cols[2] || "").trim();
     const meaning = (cols[3] || "").trim();
@@ -120,8 +126,23 @@ function parseCsv(text: string): EntryDoc[] {
     const linkJP = (cols[6] || "").trim();
     const linkVN = (cols[7] || "").trim();
     const highlightTerm = (cols[8] || "").trim();
+    
     if (!kanji) continue;
-    out.push({ kanji, reading, meaning, example, translation, linkJP, linkVN, highlightTerm });
+    
+    // Add STT number for easier editing
+    const stt = (cols[0] || "").trim();
+    
+    out.push({ 
+      kanji, 
+      reading, 
+      meaning, 
+      example, 
+      translation, 
+      linkJP, 
+      linkVN, 
+      highlightTerm,
+      stt: stt ? parseInt(stt) : undefined
+    });
   }
   return out;
 }

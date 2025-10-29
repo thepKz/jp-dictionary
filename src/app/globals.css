@@ -47,7 +47,8 @@
   --font-size-base: 16px;
 }
 
-@media (prefers-color-scheme: dark) {
+/* Remove the conflicting media query - we use data-theme instead */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #fafafa;
@@ -68,7 +69,7 @@
     --success: #4ade80;
     --warning: #fbbf24;
   }
-}
+} */
 
 /* Manual theme override via data-theme on <html> */
 [data-theme="light"] {
@@ -92,6 +93,12 @@
   --warning: #f59e0b;
 }
 
+/* Force light mode when data-theme="light" */
+[data-theme="light"] body {
+  background-color: #fefefe !important;
+  color: #0a0a0a !important;
+}
+
 [data-theme="dark"] {
   --background: #0a0a0a;
   --foreground: #fafafa;
@@ -111,6 +118,12 @@
   --ring: #ffffff;
   --success: #4ade80;
   --warning: #fbbf24;
+}
+
+/* Force dark mode when data-theme="dark" */
+[data-theme="dark"] body {
+  background-color: #0a0a0a !important;
+  color: #fafafa !important;
 }
 
 body {
@@ -346,6 +359,27 @@ body {
 }
 
 /* Override Tailwind dark mode classes to use data-theme instead of prefers-color-scheme */
+/* Ensure dark mode classes only apply when data-theme="dark" */
+[data-theme="light"] .dark\:text-white {
+  color: inherit !important;
+}
+
+[data-theme="light"] .dark\:bg-gray-900 {
+  background-color: inherit !important;
+}
+
+[data-theme="light"] .dark\:bg-gray-800 {
+  background-color: inherit !important;
+}
+
+[data-theme="light"] .dark\:text-gray-300 {
+  color: inherit !important;
+}
+
+[data-theme="light"] .dark\:text-gray-400 {
+  color: inherit !important;
+}
+
 [data-theme="dark"] .dark\:text-amber-200 {
   color: var(--color-amber-200);
 }

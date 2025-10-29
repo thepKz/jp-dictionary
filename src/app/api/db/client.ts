@@ -14,6 +14,7 @@ export type EntryDoc = {
   pos?: string[];
   adjType?: 'na' | 'i';
   highlightTerm?: string;
+  stt?: number;
 };
 
 export type FeedbackDoc = {

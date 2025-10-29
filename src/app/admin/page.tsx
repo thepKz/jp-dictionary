@@ -15,6 +15,7 @@ type Entry = {
   linkVN?: string;
   highlightTerm?: string;
   adjType?: 'na' | 'i';
+  stt?: number;
 };
 
 type Stat = {
@@ -125,10 +126,19 @@ export default function AdminPage() {
   // Table columns configuration
   const columns: TableColumn[] = [
     {
+      key: 'stt',
+      label: 'STT',
+      sortable: true,
+      width: '80px',
+      render: (value) => (
+        <span className="text-xs text-gray-500 font-mono">{value || '-'}</span>
+      )
+    },
+    {
       key: 'kanji',
       label: 'Kanji',
       sortable: true,
-      width: 'min(120px, 15vw)',
+      width: '150px',
       render: (value) => (
         <span className="font-semibold text-sm sm:text-lg whitespace-nowrap">{String(value || '')}</span>
       )
@@ -137,7 +147,7 @@ export default function AdminPage() {
       key: 'reading',
       label: 'Cách đọc',
       sortable: true,
-      width: 'min(150px, 18vw)',
+      width: '180px',
       render: (value) => (
         <span className="font-mono text-xs sm:text-sm whitespace-nowrap">{String(value || '')}</span>
       )
@@ -146,10 +156,10 @@ export default function AdminPage() {
       key: 'meaning',
       label: 'Nghĩa',
       sortable: true,
-      width: 'min(200px, 25vw)',
+      width: '250px',
       render: (value) => (
         <span className="text-xs sm:text-sm leading-tight" title={String(value || '')}>
-          {String(value || '').length > 30 ? String(value || '').substring(0, 30) + '...' : String(value || '')}
+          {String(value || '').length > 40 ? String(value || '').substring(0, 40) + '...' : String(value || '')}
         </span>
       )
     },
@@ -157,7 +167,7 @@ export default function AdminPage() {
       key: 'adjType',
       label: 'Loại',
       sortable: true,
-      width: 'min(100px, 12vw)',
+      width: '120px',
       render: (value) => (
         <div className="flex flex-col gap-1">
           <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
@@ -173,31 +183,35 @@ export default function AdminPage() {
     {
       key: 'example',
       label: 'Ví dụ',
-      width: 'min(350px, 40vw)',
+      width: '400px',
       render: (value, row) => (
-        <ExpandableText 
-          text={String(value || '')} 
-          maxLength={50} 
-          itemId={`example-${row.kanji}-${row.reading}`} 
-        />
+        <div className="whitespace-nowrap">
+          <ExpandableText 
+            text={String(value || '')} 
+            maxLength={80} 
+            itemId={`example-${row.kanji}-${row.reading}`} 
+          />
+        </div>
       )
     },
     {
       key: 'translation',
       label: 'Dịch',
-      width: 'min(300px, 35vw)',
+      width: '350px',
       render: (value, row) => (
-        <ExpandableText 
-          text={String(row.translation || '')} 
-          maxLength={60} 
-          itemId={`translation-${row.kanji}-${row.reading}`} 
-        />
+        <div className="whitespace-nowrap">
+          <ExpandableText 
+            text={String(row.translation || '')} 
+            maxLength={80} 
+            itemId={`translation-${row.kanji}-${row.reading}`} 
+          />
+        </div>
       )
     },
     {
       key: 'linkJP',
       label: 'Link JP',
-      width: 'min(100px, 12vw)',
+      width: '100px',
       render: (value, row) => (
         <span className="text-xs text-blue-600">
           {row.linkJP ? (
@@ -211,7 +225,7 @@ export default function AdminPage() {
     {
       key: 'linkVN',
       label: 'Link VN',
-      width: 'min(100px, 12vw)',
+      width: '100px',
       render: (value, row) => (
         <span className="text-xs text-blue-600">
           {row.linkVN ? (
@@ -225,10 +239,10 @@ export default function AdminPage() {
     {
       key: 'highlightTerm',
       label: 'Từ nổi bật',
-      width: 'min(120px, 15vw)',
+      width: '150px',
       render: (value, row) => (
         <span className="text-xs text-gray-600" title={String(row.highlightTerm || '')}>
-          {row.highlightTerm ? (String(row.highlightTerm).length > 15 ? String(row.highlightTerm).substring(0, 15) + '...' : String(row.highlightTerm)) : '-'}
+          {row.highlightTerm ? (String(row.highlightTerm).length > 20 ? String(row.highlightTerm).substring(0, 20) + '...' : String(row.highlightTerm)) : '-'}
         </span>
       )
     }
@@ -615,56 +629,56 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl bg-white admin-container min-h-screen">
+    <div className="container mx-auto px-4 py-8 max-w-7xl bg-white dark:bg-gray-900 admin-container min-h-screen">
       <div className="flex gap-6">
         {/* Left Sidebar */}
         <aside className="w-56 flex-shrink-0">
-          <div className="card p-4 sticky top-6 bg-white admin-sidebar">
-            <div className="text-sm text-muted-foreground mb-3">Menu quản trị</div>
+          <div className="card p-4 sticky top-6 bg-white dark:bg-gray-800 admin-sidebar">
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">Menu quản trị</div>
             <nav className="space-y-2">
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
-                  activeTab === 'stats' ? 'active' : ''
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  activeTab === 'stats' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : ''
                 }`} 
                 onClick={() => setActiveTab('stats')}
               >
                 Tổng quan
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
-                  activeTab === 'entries' ? 'active' : ''
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  activeTab === 'entries' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : ''
                 }`} 
                 onClick={() => setActiveTab('entries')}
               >
                 Tất cả từ vựng
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
-                  activeTab === 'na-table' ? 'active' : ''
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  activeTab === 'na-table' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : ''
                 }`} 
                 onClick={() => setActiveTab('na-table')}
               >
                 Tính từ Na
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
-                  activeTab === 'i-table' ? 'active' : ''
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  activeTab === 'i-table' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : ''
                 }`} 
                 onClick={() => setActiveTab('i-table')}
               >
                 Tính từ I
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
-                  activeTab === 'feedback' ? 'active' : ''
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  activeTab === 'feedback' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : ''
                 }`} 
                 onClick={() => setActiveTab('feedback')}
               >
                 Góp ý
               </button>
               <button 
-                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button ${
-                  activeTab === 'logs' ? 'active' : ''
+                className={`w-full text-left px-3 py-2 rounded transition-colors nav-button text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  activeTab === 'logs' ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : ''
                 }`} 
                 onClick={() => setActiveTab('logs')}
               >
@@ -750,7 +764,7 @@ export default function AdminPage() {
           </div>
 
           {msg && (
-            <div className="card p-4 mb-4 bg-blue-50 border-blue-200 text-blue-700">
+            <div className="card p-4 mb-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
               {msg}
             </div>
           )}
@@ -760,47 +774,47 @@ export default function AdminPage() {
             <div className="space-y-6">
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 admin-stats-card">
+                <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800 admin-stats-card">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-blue-600 mb-1 card-title">Tổng từ vựng</h3>
-                      <p className="text-3xl font-bold text-blue-700 card-text">{stats.entries.total}</p>
+                      <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1 card-title">Tổng từ vựng</h3>
+                      <p className="text-3xl font-bold text-blue-700 dark:text-blue-300 card-text">{stats.entries.total}</p>
                     </div>
 
                   </div>
                 </div>
                 
-                <div className="card p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200 admin-stats-card green">
+                <div className="card p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800 admin-stats-card green">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-green-600 mb-1 card-title">Tính từ Na</h3>
-                      <p className="text-3xl font-bold text-green-700 card-text">{stats.entries.na}</p>
+                      <h3 className="text-sm font-medium text-green-600 dark:text-green-400 mb-1 card-title">Tính từ Na</h3>
+                      <p className="text-3xl font-bold text-green-700 dark:text-green-300 card-text">{stats.entries.na}</p>
                     </div>
-                    <div className="w-12 h-12 bg-green-200 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-green-200 dark:bg-green-800 rounded-lg flex items-center justify-center">
                       <span className="text-2xl">な</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 admin-stats-card purple">
+                <div className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800 admin-stats-card purple">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-purple-600 mb-1 card-title">Tính từ I</h3>
-                      <p className="text-3xl font-bold text-purple-700 card-text">{stats.entries.i}</p>
+                      <h3 className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1 card-title">Tính từ I</h3>
+                      <p className="text-3xl font-bold text-purple-700 dark:text-purple-300 card-text">{stats.entries.i}</p>
                     </div>
-                    <div className="w-12 h-12 bg-purple-200 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-purple-200 dark:bg-purple-800 rounded-lg flex items-center justify-center">
                       <span className="text-2xl">い</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="card p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 admin-stats-card orange">
+                <div className="card p-6 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800 admin-stats-card orange">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-medium text-orange-600 mb-1 card-title">Chưa phân loại</h3>
-                      <p className="text-3xl font-bold text-orange-700 card-text">{stats.entries.untyped}</p>
+                      <h3 className="text-sm font-medium text-orange-600 dark:text-orange-400 mb-1 card-title">Chưa phân loại</h3>
+                      <p className="text-3xl font-bold text-orange-700 dark:text-orange-300 card-text">{stats.entries.untyped}</p>
                     </div>
-                    <div className="w-12 h-12 bg-orange-200 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-orange-200 dark:bg-orange-800 rounded-lg flex items-center justify-center">
                       <span className="text-2xl">❓</span>
                     </div>
                   </div>
@@ -894,7 +908,7 @@ export default function AdminPage() {
               <div className="card p-4 mb-4">
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Bộ lọc
                     </label>
                     <select
@@ -914,7 +928,7 @@ export default function AdminPage() {
                       <option value="complete">Có đầy đủ</option>
                     </select>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     {pagination && `Hiển thị ${((pagination.page - 1) * pagination.limit) + 1} - ${Math.min(pagination.page * pagination.limit, pagination.total)} trong tổng số ${pagination.total} mục`}
                   </div>
                 </div>
@@ -1099,11 +1113,11 @@ export default function AdminPage() {
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
               <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-medium">
+                  <h3 className="text-xl font-medium text-gray-900 dark:text-white">
                     {editingEntry.kanji ? 'Sửa từ vựng' : 'Thêm từ vựng mới'}
                   </h3>
                   <button 
-                    className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                    className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300"
                     onClick={() => {
                       setShowAddForm(false);
                       setEditingEntry(null);
@@ -1203,11 +1217,11 @@ export default function AdminPage() {
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
               <div className="card max-w-md w-full p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-medium">
+                  <h3 className="text-xl font-medium text-gray-900 dark:text-white">
                     {importMode === 'append' ? 'Nhập thêm CSV' : 'Nhập thay thế CSV'}
                   </h3>
                   <button 
-                    className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                    className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300"
                     onClick={() => setShowImportModal(false)}
                   >
                     ×
@@ -1215,8 +1229,8 @@ export default function AdminPage() {
                 </div>
                 
                 <div className="space-y-4">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <p className="text-sm text-yellow-800">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
                       <strong>Chế độ {importMode === 'append' ? 'thêm' : 'thay thế'}:</strong>
                       {importMode === 'append' 
                         ? ' Dữ liệu mới sẽ được thêm vào cơ sở dữ liệu hiện có'
@@ -1226,7 +1240,7 @@ export default function AdminPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Chọn loại tính từ:
                     </label>
                     <select 
@@ -1238,7 +1252,7 @@ export default function AdminPage() {
                       <option value="na">Tính từ Na (な)</option>
                       <option value="i">Tính từ I (い)</option>
                     </select>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Tự động phát hiện: kết thúc bằng い → I, kết thúc bằng な hoặc 的 → Na
                     </p>
                   </div>

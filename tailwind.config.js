@@ -5,7 +5,7 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: 'selector', // Sử dụng selector thay vì media query
+  darkMode: ['selector', '[data-theme="dark"]'], // Sử dụng data-theme attribute
   theme: {
     extend: {
       colors: {

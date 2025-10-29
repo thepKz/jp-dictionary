@@ -67,8 +67,19 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Add search filter (Vietnamese-insensitive: strip diacritics & spaces)
+    // Add search filter with Vietnamese-insensitive matching
     if (search) {
+      // Normalize Vietnamese text for better matching
+      const normalizeVi = (text: string) => {
+        if (!text) return '';
+        const nfc = text.normalize('NFC').toLowerCase();
+        const noMarks = nfc.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const noSpace = noMarks.replace(/\s+/g, '');
+        return noSpace;
+      };
+      
+      const searchNorm = normalizeVi(search);
+      
       const searchQuery = {
         $or: [
           { kanji: { $regex: search, $options: "i" } },
@@ -76,6 +87,17 @@ export async function GET(req: NextRequest) {
           { meaning: { $regex: search, $options: "i" } },
           { example: { $regex: search, $options: "i" } },
           { translation: { $regex: search, $options: "i" } },
+          { highlightTerm: { $regex: search, $options: "i" } },
+          // Vietnamese-insensitive search using aggregation
+          {
+            $expr: {
+              $or: [
+                { $regexMatch: { input: { $toLower: "$meaning" }, regex: searchNorm, options: "i" } },
+                { $regexMatch: { input: { $toLower: "$translation" }, regex: searchNorm, options: "i" } },
+                { $regexMatch: { input: { $toLower: "$example" }, regex: searchNorm, options: "i" } }
+              ]
+            }
+          }
         ]
       };
       
