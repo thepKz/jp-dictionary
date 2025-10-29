@@ -131,7 +131,7 @@ export default function AdminPage() {
       sortable: true,
       width: '80px',
       render: (value) => (
-        <span className="text-xs text-gray-500 font-mono">{value || '-'}</span>
+        <span className="text-xs text-gray-500 font-mono">{String(value || '-')}</span>
       )
     },
     {
