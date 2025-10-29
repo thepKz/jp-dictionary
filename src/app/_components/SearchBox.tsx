@@ -159,7 +159,7 @@ const getAdjectiveVariations = (word: string, reading?: string) => {
 
 // Highlight JP by adjective variations (kanji-based) or explicit highlightTerm if provided
 const highlightJP = (text: string, kanji: string, highlightTerm?: string, reading?: string) => {
-  const base = (highlightTerm && highlightTerm.trim()) || kanji;
+  const base = kanji;
   const variations = getAdjectiveVariations(base, reading);
   let out = text;
   variations.forEach(v => {

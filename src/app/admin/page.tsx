@@ -1130,14 +1130,14 @@ export default function AdminPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input 
-                      className="input" 
+                      className="input ja-input" 
                       value={editingEntry.kanji || ''} 
                       onChange={(e) => setEditingEntry({...editingEntry, kanji: e.target.value})} 
                       placeholder="Kanji" 
                       required
                     />
                     <input 
-                      className="input" 
+                      className="input ja-input" 
                       value={editingEntry.reading || ''} 
                       onChange={(e) => setEditingEntry({...editingEntry, reading: e.target.value})} 
                       placeholder="Cách đọc" 
@@ -1151,7 +1151,7 @@ export default function AdminPage() {
                       required
                     />
                     <input 
-                      className="input" 
+                      className="input ja-input" 
                       value={editingEntry.example || ''} 
                       onChange={(e) => setEditingEntry({...editingEntry, example: e.target.value})} 
                       placeholder="Ví dụ" 
