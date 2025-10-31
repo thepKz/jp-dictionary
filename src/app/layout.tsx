@@ -8,8 +8,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Từ điển tính từ kinh tế - JP",
-  description: "Từ điển chuyên tính từ kinh tế tiếng Nhật với UI hiện đại",
+  title: "Sổ tay tính từ kinh tế - JP",
+  description: "Sổ tay chuyên tính từ kinh tế tiếng Nhật với UI hiện đại",
 };
 
 export default function RootLayout({
